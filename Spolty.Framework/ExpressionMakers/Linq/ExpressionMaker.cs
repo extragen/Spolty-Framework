@@ -1,0 +1,244 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using Spolty.Framework.Exceptions;
+using Spolty.Framework.ExpressionMakers.Factories;
+using Spolty.Framework.Helpers;
+using Spolty.Framework.Storages;
+
+namespace Spolty.Framework.ExpressionMakers.Linq
+{
+    internal class ExpressionMaker : IExpressionMaker
+    {
+        private const string ParameterDictionaryKey = "ParameterDictionary";
+        protected static Type QueryableType;
+        protected static Type EnumerableType;
+        protected static Type IEnumerableType;
+        private readonly IExpressionMakerFactory _factory;
+
+        static ExpressionMaker()
+        {
+            QueryableType = typeof (Queryable);
+            EnumerableType = typeof (Enumerable);
+            IEnumerableType = typeof (IEnumerable);
+        }
+
+        public ExpressionMaker(IExpressionMakerFactory factory)
+        {
+            _factory = factory;
+        }
+
+        public IExpressionMakerFactory Factory
+        {
+            get { return _factory; }
+        }
+
+        #region Simple 
+
+        internal static Expression MakeTake(Expression source, int take)
+        {
+            if (source == null)
+            {
+                throw new SpoltyException("SourceExpression not defined");
+            }
+
+            //TODO: for sequence
+            return CallQueryableMethod("Take", new[] { source.Type }, source, Expression.Constant(take));
+            //return QueryExpression.Take(source, Expression.Constant(take));
+        }
+
+        internal static Expression MakeExcept(Expression source, Expression except)
+        {
+            if (source == null)
+            {
+                throw new SpoltyException("source not defined");
+            }
+
+            if (except == null)
+            {
+                throw new SpoltyException("except not defined");
+            }
+
+            Type sourceType = GetTemplateType(source);
+            Type exceptType = GetTemplateType(except);
+
+            if (sourceType != exceptType)
+            {
+                throw new SpoltyException("Type of source mismatch type of except");
+            }
+
+            return CallQueryableMethod("Except", new[] { source.Type }, source, except);
+            //return QueryExpression.Except(source, except);
+        }
+        
+        internal static Expression MakeUnion(Expression source, Expression union)
+        {
+            if (source == null)
+            {
+                throw new SpoltyException("source not defined");
+            }
+
+            if (union == null)
+            {
+                throw new SpoltyException("except not defined");
+            }
+
+            Type sourceType = GetTemplateType(source);
+            Type exceptType = GetTemplateType(union);
+
+            if (sourceType != exceptType)
+            {
+                throw new SpoltyException("Type of source mismatch type of union");
+            }
+
+            return CallQueryableMethod("Union", new[] { source.Type }, source, union);
+            //return QueryExpression.Except(source, except);
+        }
+
+        internal static Expression MakeSkip(Expression source, int skip)
+        {
+            if (source == null)
+            {
+                throw new SpoltyException("SourceExpression not defined");
+            }
+            //TODO: for sequence
+            return CallQueryableMethod("Skip", new[] { source.Type }, source, Expression.Constant(skip));
+            //return QueryExpression.Skip(source, Expression.Constant(skip));
+        }
+
+        #endregion
+
+        #region Utility Methods
+
+        internal static Type GetTemplateType(Expression sourceExpression)
+        {
+            const int templateIndex = 0;
+            
+            if (!sourceExpression.Type.IsGenericType)
+            {
+                return sourceExpression.Type;
+            }
+
+            Type[] genericArguments = sourceExpression.Type.GetGenericArguments();
+            
+            if (genericArguments.Length == 0)
+            {
+                throw new ArgumentException("sourceExpression is not generic source");
+            }
+            
+            return genericArguments[templateIndex];
+        }
+
+        internal static Expression GetPropertyExpression(Type sourceType, string propertyName, Expression parameter)
+        {
+            PropertyInfo propertyInfo = sourceType.GetProperty(propertyName);
+            if (propertyInfo == null)
+            {
+                throw new SpoltyException(String.Format("property not found: {0}", propertyName));
+            }
+
+            return Expression.Property(parameter, propertyInfo);
+        }
+
+        internal static ParameterExpression GetParameterExpression(Type type, string name)
+        {
+            var parametersDictionary =
+                (Dictionary<Type, ParameterExpression>) ThreadStorage.Current[ParameterDictionaryKey];
+            if (parametersDictionary == null)
+            {
+                parametersDictionary = new Dictionary<Type, ParameterExpression>();
+                ThreadStorage.Current[ParameterDictionaryKey] = parametersDictionary;
+            }
+            ParameterExpression result;
+            parametersDictionary.TryGetValue(type, out result);
+            if (result == null)
+            {
+                result = Expression.Parameter(type, name);
+                parametersDictionary.Add(type, result);
+            }
+            return result;
+        }
+
+        internal static LambdaExpression GetLambdaExpression(Type sourceType, string includingProperty,
+                                                             ParameterExpression parameter, MemberExpression member)
+        {
+            Expression property;
+            if (member == null)
+            {
+                property = GetPropertyExpression(sourceType, includingProperty, parameter);
+            }
+            else
+            {
+                property =
+                    GetPropertyExpression(ReflectionHelper.GetMemberType(member.Member), includingProperty, member);
+            }
+            return Expression.Lambda(property, parameter);
+        }
+
+        internal static Expression ConvertOrCastInnerPropertyExpression(Type outerPropertyType,
+                                                                        PropertyInfo innerPropertyInfo,
+                                                                        Expression innerPropertyExpression)
+        {
+            if (!innerPropertyInfo.PropertyType.IsGenericType)
+            {
+                if (IsConvertible(outerPropertyType))
+                {
+                    innerPropertyExpression = Expression.Convert(innerPropertyExpression, outerPropertyType);
+                }
+                else
+                {
+                    //Expression.Cast
+                    innerPropertyExpression = Expression.TypeAs(innerPropertyExpression, outerPropertyType);
+                }
+            }
+            return innerPropertyExpression;
+        }
+
+        private static bool IsConvertible(Type type)
+        {
+            if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof (Nullable<>)))
+            {
+                type = type.GetGenericArguments()[0];
+            }
+
+            if (type.IsEnum)
+            {
+                return true;
+            }
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean:
+                case TypeCode.Char:
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Single:
+                case TypeCode.Double:
+                case TypeCode.Decimal:
+                    return true;
+            }
+            return false;
+        }
+
+        protected internal static Expression CallQueryableMethod(String methodName, Type[] typeArguments, params Expression[] arguments)
+        {
+            return Expression.Call(QueryableType, methodName, typeArguments, arguments);
+        }
+
+        protected internal static Expression CallEnumerableMethod(String methodName, Type[] typeArguments, params Expression[] arguments)
+        {
+            return Expression.Call(EnumerableType, methodName, typeArguments, arguments);
+        }
+
+        #endregion
+
+    }
+}
