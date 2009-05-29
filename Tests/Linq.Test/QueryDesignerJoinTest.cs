@@ -82,7 +82,7 @@ namespace Linq.Test
          */
 
         [Test]
-        public void TestJoinWithOneChildAndFilteredByCategoryName()
+        public void TestJoinWithOneChildAndFilteredByCategoryNameV1()
         {
             const string categoryName = "Condiments";
             const int resultRowCount = 12;
@@ -102,6 +102,35 @@ namespace Linq.Test
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
         }
+
+        [Test]
+        public void TestJoinWithOneChildAndFilteredByProductNameAndCategoryNameV2()
+        {
+            const string productName = "Louisiana";
+            const string categoryName = "Condiments";
+            const int resultRowCount = 2;
+            //create root node
+            var root = new JoinNode(typeof(Product));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof(Category), "Products");
+            root.AddChildren(categoryNode);
+
+            var queryDesinger = new QueryDesinger(context, root);
+
+            // add condition for filtering by ProductName Like "Louisiana%"
+            var product = new Condition("ProductName", productName, ConditionOperator.StartsWith);
+
+            // add condition for filtering by CategoryName == "Condiments"
+            var categoryCondition = new Condition("CategoryName", categoryName, ConditionOperator.EqualTo, typeof(Category));
+
+            queryDesinger.AddConditions(new ConditionList(product, categoryCondition));
+            var list = new List<Product>(queryDesinger.Cast<Product>());
+            Assert.AreEqual(resultRowCount, list.Count);
+        }
+
 
         /*  
          * Query created in Microsoft SQL Server Management Studio

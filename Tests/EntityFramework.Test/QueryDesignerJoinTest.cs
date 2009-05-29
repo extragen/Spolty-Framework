@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Data.Metadata.Edm;
-using System.Data.Objects.DataClasses;
 using System.Linq;
 using EntityFrameworkNorthwind.Entities;
 using NUnit.Framework;
@@ -47,7 +46,6 @@ namespace EntityFramework.Test
          *      ON [t0].[CategoryID] = [t1].[CategoryID]
          *      
          */
-
         [Test]
         public void TestJoinWithOneChild()
         {
@@ -83,7 +81,6 @@ namespace EntityFramework.Test
          * WHERE [t1].[CategoryName] = @p0',N'@p0 nvarchar(10)',@p0=N'Condiments'
          * 
          */
-
         [Test]
         public void TestJoinWithOneChildAndFilteredByCategoryName()
         {
@@ -124,9 +121,8 @@ namespace EntityFramework.Test
          * WHERE ([t0].[ProductName] LIKE @p0) AND ([t1].[CategoryName] = @p1)',N'@p0 nvarchar(10),@p1 nvarchar(10)',@p0=N'Louisiana%',@p1=N'Condiments'
          * 
          */
-
         [Test]
-        public void TestJoinWithOneChildAndFilteredByProductNameAndCategoryName()
+        public void TestJoinWithOneChildAndFilteredByProductNameAndCategoryNameV1()
         {
             const string productName = "Louisiana";
             const string categoryName = "Condiments";
@@ -147,6 +143,34 @@ namespace EntityFramework.Test
             categoryNode.AddConditions(new Condition("CategoryName", categoryName));
 
             var queryDesinger = new QueryDesinger(context, root);
+            var list = new List<Products>(queryDesinger.Cast<Products>());
+            Assert.AreEqual(resultRowCount, list.Count);
+        }
+
+        [Test]
+        public void TestJoinWithOneChildAndFilteredByProductNameAndCategoryNameV2()
+        {
+            const string productName = "Louisiana";
+            const string categoryName = "Condiments";
+            const int resultRowCount = 2;
+            //create root node
+            var root = new JoinNode(typeof (Products));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof (Categories), "Products");
+            root.AddChildren(categoryNode);
+
+            var queryDesinger = new QueryDesinger(context, root);
+
+            // add condition for filtering by ProductName Like "Louisiana%"
+            var product = new Condition("ProductName", productName, ConditionOperator.StartsWith);
+            
+            // add condition for filtering by CategoryName == "Condiments"
+            var categoryCondition = new Condition("CategoryName", categoryName, ConditionOperator.EqualTo, typeof(Categories));
+            
+            queryDesinger.AddConditions(new ConditionList(product, categoryCondition));
             var list = new List<Products>(queryDesinger.Cast<Products>());
             Assert.AreEqual(resultRowCount, list.Count);
         }
@@ -190,13 +214,13 @@ namespace EntityFramework.Test
             // add first child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof (Categories));
+            var categoryNode = new JoinNode(typeof(Categories), "Products");
             root.AddChildren(categoryNode);
 
             // add second child node Order_Detail. PropertyName not defined
             // because Order_Detail linked with Product by next property:
             // public Product Product - name of property is equal name of type 
-            var order_DetailNode = new JoinNode(typeof (Order_Details), "PROd");
+            var order_DetailNode = new JoinNode(typeof(Order_Details), "Products");
 
             root.AddChildren(order_DetailNode);
 

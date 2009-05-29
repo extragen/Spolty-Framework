@@ -12,7 +12,7 @@
     <AssemblyName>Spolty.Framework</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>spolty.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -58,7 +58,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Activators\SpoltyActivator.cs" />
     <Compile Include="Checkers\Checker.cs" />
+    <Compile Include="ConfigurationSections\FactoryConfiguration.cs" />
+    <Compile Include="ConfigurationSections\FactoryConfigurationCollection.cs" />
+    <Compile Include="ConfigurationSections\SpoltyFrameworkSectionHandler.cs" />
     <Compile Include="Exceptions\SArgumentNullException.cs" />
     <Compile Include="ExpressionMakers\Linq\AggregateExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ConditionExpressionMaker.cs" />

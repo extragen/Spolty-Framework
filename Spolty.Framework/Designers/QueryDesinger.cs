@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
+using Spolty.Framework.Activators;
 using Spolty.Framework.Checkers;
+using Spolty.Framework.ConfigurationSections;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers;
 using Spolty.Framework.ExpressionMakers.Factories;
@@ -117,26 +119,6 @@ namespace Spolty.Framework.Designers
             return this;
         }
 
-        private IExpressionMakerFactory CreateExpressionMakerFactory()
-        {
-//            return new LinqExpressionMakerFactory(_context);
-            return new EntityFrameworkExpressionMakerFactory(_context);
-        }
-
-        private void InitializeQueryable()
-        {
-            _expressionMakerFactory = CreateExpressionMakerFactory();
-            IQueryable queryable = _expressionMakerFactory.GetTable(ElementType);
-
-            if (queryable == null)
-            {
-                throw new SpoltyException(String.Format("IQueryable not found for type: {0}", ElementType.FullName));
-            }
-
-            Provider = queryable.Provider;
-            _expression = queryable.Expression;
-        }
-
         public QueryDesinger AddOrderings(OrderingList orderings)
         {
             if (orderings == null || orderings.Count == 0)
@@ -222,6 +204,28 @@ namespace Spolty.Framework.Designers
                 }
             }
             return newExpression;
+        }
+
+        private void InitializeQueryable()
+        {
+            _expressionMakerFactory = CreateExpressionMakerFactory();
+            IQueryable queryable = _expressionMakerFactory.GetTable(ElementType);
+
+            if (queryable == null)
+            {
+                throw new SpoltyException(String.Format("IQueryable not found for type: {0}", ElementType.FullName));
+            }
+
+            Provider = queryable.Provider;
+            _expression = queryable.Expression;
+        }
+
+        private IExpressionMakerFactory CreateExpressionMakerFactory()
+        {
+            FactoryConfigurationCollection collection = SpoltyFrameworkSectionHandler.Instance.Factories;
+            return
+                SpoltyActivator.CreateInstance<IExpressionMakerFactory>(
+                    collection.UseFactory.Type, new[] {_context});
         }
 
         #region Skip And Take

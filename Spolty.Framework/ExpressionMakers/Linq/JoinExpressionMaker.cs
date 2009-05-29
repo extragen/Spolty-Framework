@@ -76,7 +76,6 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             MetaAssociation association =
                 ((DataContext) Factory.CurrentContext).Mapping.GetTable(outerType).RowType.Associations.FirstOrDefault(
                     searchAss => searchAss.OtherType.Type == innerType);
-//            ((ObjectContext) Factory.CurrentContext).MetadataWorkspace.GetItems<AssociationType>(DataSpace.CSpace)
             if (association == null)
             {
                 throw new SpoltyException("Property not found");
