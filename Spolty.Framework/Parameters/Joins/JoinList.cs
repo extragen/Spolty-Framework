@@ -55,11 +55,11 @@ namespace Spolty.Framework.Parameters.Joins
                 for (int index = 1; index < current.Count; index++)
                 {
                     Type leftBizObjType = current[index].Left.BizObjectType;
-                    if (parentNode.BizObjectType == leftBizObjType)
+                    if (parentNode.EntityType == leftBizObjType)
                     {
                         joinNode = parentNode;
                     }
-                    else if (joinNode.BizObjectType != leftBizObjType)
+                    else if (joinNode.EntityType != leftBizObjType)
                     {
                         joinNode = (JoinNode) parentNode.Find(leftBizObjType);
                         if (joinNode == null)

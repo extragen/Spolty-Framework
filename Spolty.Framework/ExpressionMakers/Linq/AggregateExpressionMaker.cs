@@ -15,7 +15,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 //            foreach (AggregateMethod aggregateMethod in node.ConditionAggregateMethod)
 //            {
 //                expressions.Add(
-//                    MakeAggregateMethodExpression(sourceExpression, node.BizObjectType, aggregateMethod, parameter));
+//                    MakeAggregateMethodExpression(sourceExpression, node.EntityType, aggregateMethod, parameter));
 //            }
 //            return expressions;
 //        }

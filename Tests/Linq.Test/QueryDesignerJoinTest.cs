@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using LinqNorthwind.Entities;
 using NUnit.Framework;
@@ -16,6 +19,7 @@ namespace Linq.Test
     public class QueryDesignerJoinTest
     {
         private readonly NorthwindDataContext context = new NorthwindDataContext(ConnectionString.ConnectionString);
+        private readonly SqlConnection _connection = new SqlConnection(ConnectionString.ConnectionString);
 
         private static ConnectionStringSettings ConnectionString
         {
@@ -28,12 +32,46 @@ namespace Linq.Test
             {
                 context.Dispose();
             }
+
+            if (_connection != null)
+            {
+                _connection.Dispose();
+            }
+        }
+
+        private void CheckDataWithExecuteReaderResult(string commandText, int resultRowCount, List<Product> rsultList)
+        {
+            try
+            {
+                int[] productIdArray = rsultList.Select(product => product.ProductID).ToArray();
+                using (IDbCommand command = new SqlCommand(commandText, _connection))
+                {
+                    _connection.Open();
+                    IDataReader reader = command.ExecuteReader();
+
+                    int count = 0;
+                    while (reader.Read())
+                    {
+                        count++;
+                        Assert.Contains(Convert.ToInt32(reader["ProductID"]), productIdArray);
+                    }
+                    // check numbers of entity
+                    Assert.AreEqual(resultRowCount, count);
+                }
+            }
+            finally
+            {
+                if (_connection != null)
+                {
+                    _connection.Close();
+                }
+            }
         }
 
         /// <summary>
         ///  Query created in Microsoft SQL Server Management Studio
         ///  
-        ///   SELECT     Products.*
+        ///   SELECT     Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued
         ///   FROM       Products  INNER JOIN Categories
         /// 		        ON Products.CategoryID = Categories.CategoryID
         /// 		
@@ -59,7 +97,14 @@ namespace Linq.Test
 
             var queryDesinger = new QueryDesinger(context, root);
             var list = new List<Product>(queryDesinger.Cast<Product>());
+
+            // check numbers of entity
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
         /// <summary>
@@ -99,6 +144,12 @@ namespace Linq.Test
             var queryDesinger = new QueryDesinger(context, root);
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID 
+WHERE Categories.CategoryName = N'Condiments'";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
         /// <summary>
@@ -135,9 +186,16 @@ namespace Linq.Test
             var queryDesinger = new QueryDesinger(context, root);
             // add condition for filtering by CategoryName == "Condiments"
 
-            queryDesinger.AddConditions(new Condition("CategoryName", categoryName, ConditionOperator.EqualTo, typeof(Category)));
+            queryDesinger.AddConditions(new Condition("CategoryName", categoryName, ConditionOperator.EqualTo,
+                                                      typeof (Category)));
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID
+WHERE Categories.CategoryName = N'Condiments'";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
         /// <summary>
@@ -146,7 +204,7 @@ namespace Linq.Test
         ///  SELECT     Products.* 
         ///  FROM       Products  INNER JOIN Categories
         ///              ON Products.CategoryID = Categories.CategoryID
-        ///  WHERE Categories.CategoryName = N'Condiments'
+        ///  WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Condiments'
         ///  
         /// result of that script it's 12 rows that why I test row count equal 12
         /// 
@@ -164,12 +222,12 @@ namespace Linq.Test
             const string categoryName = "Condiments";
             const int resultRowCount = 2;
             //create root node
-            var root = new JoinNode(typeof(Product));
+            var root = new JoinNode(typeof (Product));
 
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof(Category), "Products");
+            var categoryNode = new JoinNode(typeof (Category), "Products");
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, root);
@@ -178,11 +236,18 @@ namespace Linq.Test
             var product = new Condition("ProductName", productName, ConditionOperator.StartsWith);
 
             // add condition for filtering by CategoryName == "Condiments"
-            var categoryCondition = new Condition("CategoryName", categoryName, ConditionOperator.EqualTo, typeof(Category));
+            var categoryCondition = new Condition("CategoryName", categoryName, ConditionOperator.EqualTo,
+                                                  typeof (Category));
 
             queryDesinger.AddConditions(new ConditionList(product, categoryCondition));
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID
+WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Condiments'";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
         /// <summary>
@@ -226,8 +291,48 @@ namespace Linq.Test
             var queryDesinger = new QueryDesinger(context, root);
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID
+WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Condiments'";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
-        
+
+        /// <summary>
+        ///  Query created in Microsoft SQL Server Management Studio
+        ///  
+        ///   SELECT     Products.*
+        ///   FROM       Products  INNER JOIN Categories
+        /// 		        ON Products.CategoryID = Categories.CategoryID
+        /// 		
+        ///   result of that script it's 77 rows that why I test row count equal 77
+        ///   
+        ///  Query generated by QueryDesigner
+        ///  
+        ///  SELECT [t0].[ProductID], [t0].[ProductName], [t0].[SupplierID], [t0].[CategoryID], [t0].[QuantityPerUnit], [t0].[UnitPrice], [t0].[UnitsInStock], [t0].[UnitsOnOrder], [t0].[ReorderLevel], [t0].[Discontinued]
+        ///  FROM [dbo].[Products] AS [t0] INNER JOIN [dbo].[Categories] AS [t1] 
+        ///       ON [t0].[CategoryID] = [t1].[CategoryID]
+        /// </summary>
+        [Test]
+        public void TestJoinWithOneChildSkipAndTake()
+        {
+            const int resultRowCount = 10;
+            //create root node
+            var root = new JoinNode(typeof (Product));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof (Category), "Products");
+            root.AddChildren(categoryNode);
+
+            var queryDesinger = new QueryDesinger(context, root);
+            queryDesinger.SkipAndTake(10, 10);
+            var list = new List<Product>(queryDesinger.Cast<Product>());
+            Assert.AreEqual(resultRowCount, list.Count);
+        }
+
         /// <summary>
         /// Query created in Microsoft SQL Server Management Studio
         /// 
@@ -290,46 +395,202 @@ namespace Linq.Test
 
             // make Distinct
             IQueryable<Product> distictedProducts = queryDesinger.Distinct().Cast<Product>();
-            
+
             var list = new List<Product>(distictedProducts);
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @" SELECT   DISTINCT  Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued
+                           FROM         Products 
+                                   INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID 
+                                   INNER JOIN [Order Details] ON Products.ProductID = [Order Details].ProductID
+                           WHERE   [Order Details].Discount > 0.15   
+                                   AND ((Products.ProductName LIKE N'Louisiana%') OR (Categories.CategoryName = N'Condiments'))";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
         /// <summary>
-        ///  Query created in Microsoft SQL Server Management Studio
+        /// Query created in Microsoft SQL Server Management Studio
+        /// 
+        /// SELECT   DISTINCT  Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued
+        /// FROM         Products 
+        ///         INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID 
+        ///         INNER JOIN [Order Details] ON Products.ProductID = [Order Details].ProductID
+        /// WHERE   [Order Details].Discount > 0.15   
+        ///         AND ((Products.ProductName LIKE N'Louisiana%') OR (Categories.CategoryName = N'Condiments'))
         ///  
-        ///   SELECT     Products.*
-        ///   FROM       Products  INNER JOIN Categories
-        /// 		        ON Products.CategoryID = Categories.CategoryID
-        /// 		
-        ///   result of that script it's 77 rows that why I test row count equal 77
-        ///   
-        ///  Query generated by QueryDesigner
-        ///  
-        ///  SELECT [t0].[ProductID], [t0].[ProductName], [t0].[SupplierID], [t0].[CategoryID], [t0].[QuantityPerUnit], [t0].[UnitPrice], [t0].[UnitsInStock], [t0].[UnitsOnOrder], [t0].[ReorderLevel], [t0].[Discontinued]
-        ///  FROM [dbo].[Products] AS [t0] INNER JOIN [dbo].[Categories] AS [t1] 
-        ///       ON [t0].[CategoryID] = [t1].[CategoryID]
+        /// result of that script it's 9 rows that why I test row count equal 9
+        /// 
+        /// Query generated by QueryDesigner
+        /// 
+        /// exec sp_executesql N'SELECT DISTINCT [t0].[ProductID], [t0].[ProductName], [t0].[SupplierID], [t0].[CategoryID], [t0].[QuantityPerUnit], [t0].[UnitPrice], [t0].[UnitsInStock], [t0].[UnitsOnOrder], [t0].[ReorderLevel], [t0].[Discontinued]
+        /// FROM [dbo].[Products] AS [t0]
+        ///     INNER JOIN [dbo].[Categories] AS [t1] ON [t0].[CategoryID] = [t1].[CategoryID] 
+        ///     INNER JOIN [dbo].[Order Details] AS [t2] ON [t0].[ProductID] = [t2].[ProductID] 
+        ///     LEFT OUTER JOIN [dbo].[Categories] AS [t3] ON [t3].[CategoryID] = [t0].[CategoryID]
+        /// WHERE ([t2].[Discount] > @p0) AND (([t0].[ProductName] LIKE @p1) OR ([t1].[CategoryName] = @p2))',
+        /// N'@p0 real,@p1 nvarchar(10),@p2 nvarchar(10)',@p0=0,15,@p1=N'Louisiana%',@p2=N'Condiments'
         /// </summary>
         [Test]
-        public void TestJoinWithOneChildSkipAnTake()
+        public void TestJoinWithTwoChildrenAndComplicatedFilterAndOrderings()
         {
-            const int resultRowCount = 10;
+            const string productName = "Louisiana";
+            const string categoryName = "Condiments";
+            const int resultRowCount = 9;
             //create root node
-            var root = new JoinNode(typeof(Product));
+            var root = new JoinNode(typeof (Product));
 
-            // add child node Category with propertyName "Products". 
+            // add first child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof(Category), "Products");
+            var categoryNode = new JoinNode(typeof (Category));
             root.AddChildren(categoryNode);
 
-            Ordering productNameOrder = new Ordering("ProductName", SortDirection.Ascending, typeof(Product));
-            Ordering categoryNameOrder = new Ordering("CategoryName", SortDirection.Descending, typeof(Category));
+            // add second child node Order_Detail. PropertyName not defined
+            // because Order_Detail linked with Product by next property:
+            // public Product Product - name of property is equal name of type 
+            var orderDetailNode = new JoinNode(typeof (Order_Detail));
+
+            root.AddChildren(orderDetailNode);
+
             var queryDesinger = new QueryDesinger(context, root);
-            queryDesinger.SkipAndTake(10, 10);
+
+            // create conditions for filtering by ProductName Like "Louisiana%" Or CategoryName == "Condiments"
+            var productCondition = new Condition("ProductName", productName, ConditionOperator.StartsWith,
+                                                 typeof (Product));
+            var categoryCondition = new Condition("CategoryName", categoryName, ConditionOperator.EqualTo,
+                                                  typeof (Category));
+            var orCondition = new OrCondition(productCondition, categoryCondition);
+
+            // create condition for filtering by [Order Details].Discount > 0.15
+            var discountCondition = new Condition("Discount", 0.15F, ConditionOperator.GreaterThen,
+                                                  typeof (Order_Detail));
+
+            var conditionals = new ConditionList(orCondition, discountCondition);
+
+            // assign conditions
+            queryDesinger.AddConditions(conditionals);
+
+
+            // make orderings by ProductName and CategoryName
+            var productNameOrder = new Ordering("ProductName", SortDirection.Ascending, typeof (Product));
+            var categoryNameOrder = new Ordering("CategoryName", SortDirection.Descending, typeof (Category));
+
             queryDesinger.AddOrderings(new OrderingList(productNameOrder, categoryNameOrder));
-            var list = new List<Product>(queryDesinger.Cast<Product>());
+
+            // make Distinct
+            IQueryable<Product> distictedProducts = queryDesinger.Distinct().Cast<Product>();
+
+            var list = new List<Product>(distictedProducts);
             Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @" SELECT   DISTINCT  Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued
+                           FROM         Products 
+                                   INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID 
+                                   INNER JOIN [Order Details] ON Products.ProductID = [Order Details].ProductID
+                           WHERE   [Order Details].Discount > 0.15   
+                                   AND ((Products.ProductName LIKE N'Louisiana%') OR (Categories.CategoryName = N'Condiments'))";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
+        }
+
+        /// <summary>
+        /// Query created in Microsoft SQL Server Management Studio
+        /// 
+        /// SELECT  DISTINCT  Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued 
+        /// FROM         Orders 
+        ///         INNER JOIN [Order Details] ON Orders.OrderID = [Order Details].OrderID 
+        ///         INNER JOIN Products ON [Order Details].ProductID = Products.ProductID 
+        ///         INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID 
+        ///         INNER JOIN EmployeeTerritories ON Employees.EmployeeID = EmployeeTerritories.EmployeeID 
+        ///         INNER JOIN Territories ON EmployeeTerritories.TerritoryID = Territories.TerritoryID 
+        ///         INNER JOIN Region ON Territories.RegionID = Region.RegionID
+        /// WHERE     (Region.RegionID = 4) AND (Territories.TerritoryDescription like 'Orlando%') AND 
+        ///             (Products.CategoryID IN (4, 5, 6)) 
+        ///  
+        /// result of that script it's 23 rows that why I test row count equal 23
+        /// 
+        /// Query generated by QueryDesigner
+        /// 
+        /// exec sp_executesql N'SELECT DISTINCT [t0].[ProductID], [t0].[ProductName], [t0].[SupplierID], [t0].[CategoryID], [t0].[QuantityPerUnit], [t0].[UnitPrice], [t0].[UnitsInStock], [t0].[UnitsOnOrder], 
+        /// [t0].[ReorderLevel], [t0].[Discontinued]
+        /// FROM [dbo].[Products] AS [t0]
+        /// INNER JOIN ([dbo].[Order Details] AS [t1]
+        ///     INNER JOIN ([dbo].[Orders] AS [t2]
+        ///         INNER JOIN ([dbo].[Employees] AS [t3]
+        ///             INNER JOIN ([dbo].[EmployeeTerritories] AS [t4]
+        ///                 INNER JOIN ([dbo].[Territories] AS [t5]
+        ///                     INNER JOIN [dbo].[Region] AS [t6] ON [t5].[RegionID] = [t6].[RegionID]) ON [t4].[TerritoryID] = [t5].[TerritoryID]) ON [t3].[EmployeeID] = [t4].[EmployeeID]) ON [t2].[EmployeeID] 
+        ///  = [t3].[EmployeeID]) ON [t1].[OrderID] = [t2].[OrderID]) ON [t0].[ProductID] = [t1].[ProductID]
+        ///  WHERE (([t0].[CategoryID] = @p0) OR ([t0].[CategoryID] = @p1) OR ([t0].[CategoryID] = @p2)) AND ([t5].[TerritoryDescription] LIKE @p3) AND ([t6].[RegionID] = @p4)',N'@p0 int,@p1 int,@p2 int,@p3 
+        ///  nvarchar(8),@p4 int',@p0=4,@p1=6,@p2=5,@p3=N'Orlando%',@p4=4
+        ///        
+        /// </summary>
+        [Test]
+        public void TestComplicatedJoinWithFilters()
+        {
+            const int regionId = 4;
+            const string territoryDescription = "Orlando";
+            const int resultRowCount = 23;
+            //create root node
+            var root = new JoinNode(typeof (Product));
+
+            // add second child node Order_Detail. PropertyName not defined
+            // because Order_Detail linked with Product by next property:
+            // public Product Product - name of property is equal name of type 
+            var orderDetailNode = new JoinNode(typeof (Order_Detail));
+            root.AddChildren(orderDetailNode);
+
+            var orderNode = new JoinNode(typeof (Order));
+            orderDetailNode.AddChildren(orderNode);
+
+            var employeeNode = new JoinNode(typeof (Employee));
+            orderNode.AddChildren(employeeNode);
+
+            var employeeTerrritoryNode = new JoinNode(typeof (EmployeeTerritory));
+            employeeNode.AddChildren(employeeTerrritoryNode);
+
+            var territoryNode = new JoinNode(typeof (Territory));
+            employeeTerrritoryNode.AddChildren(territoryNode);
+
+            var regionNode = new JoinNode(typeof (Region));
+            territoryNode.AddChildren(regionNode);
+
+            var queryDesinger = new QueryDesinger(context, root);
+
+            // create conditions for filtering by RegionID = 4 and TerritoryDescription like "Orlando%" and (CategoryID == 4 or CategoryID == 5 or CategoryID == 6)
+            var regionCondition = new Condition("RegionID", regionId, ConditionOperator.EqualTo, typeof (Region));
+            var territoryCondition = new Condition("TerritoryDescription", territoryDescription,
+                                                   ConditionOperator.StartsWith, typeof (Territory));
+            OrCondition categoryIDsCondition = OrCondition.Create("CategoryID", new object[] {4, 5, 6});
+
+            var conditionals = new ConditionList(regionCondition, territoryCondition, categoryIDsCondition);
+
+            // assign conditions
+            queryDesinger.AddConditions(conditionals);
+
+
+            // make Distinct
+            IQueryable<Product> distictedProducts = queryDesinger.Distinct().Cast<Product>();
+
+            var list = new List<Product>(distictedProducts);
+            Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT  DISTINCT  Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued 
+                  FROM         Orders 
+                          INNER JOIN [Order Details] ON Orders.OrderID = [Order Details].OrderID 
+                          INNER JOIN Products ON [Order Details].ProductID = Products.ProductID 
+                          INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID 
+                          INNER JOIN EmployeeTerritories ON Employees.EmployeeID = EmployeeTerritories.EmployeeID 
+                          INNER JOIN Territories ON EmployeeTerritories.TerritoryID = Territories.TerritoryID 
+                          INNER JOIN Region ON Territories.RegionID = Region.RegionID
+                  WHERE     (Region.RegionID = 4) AND (Territories.TerritoryDescription like 'Orlando%') AND 
+                              (Products.CategoryID IN (4, 5, 6)) ";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
     }
 }

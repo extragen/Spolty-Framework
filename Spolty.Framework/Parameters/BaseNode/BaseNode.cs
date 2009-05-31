@@ -5,7 +5,7 @@ namespace Spolty.Framework.Parameters.BaseNode
 {
     public abstract class BaseNode : IComparer<BaseNode> 
     {
-        private Type _bizObjectType;
+        private Type _entityType;
 
         internal BaseNode _parentNode = null;
 
@@ -22,10 +22,10 @@ namespace Spolty.Framework.Parameters.BaseNode
             get { return _childNodes; }
         }
 
-        public Type BizObjectType
+        public Type EntityType
         {
-            get { return _bizObjectType; }
-            internal set { _bizObjectType = value; }
+            get { return _entityType; }
+            internal set { _entityType = value; }
         }
 
         public int Level
@@ -34,15 +34,15 @@ namespace Spolty.Framework.Parameters.BaseNode
             internal set { _level = value; }
         }
 
-        protected BaseNode(Type bizObjectType)
+        protected BaseNode(Type entityType)
         {
-            _bizObjectType = bizObjectType;
+            _entityType = entityType;
         }
 
-        public BaseNode Find(Type bizObjectType)
+        public BaseNode Find(Type entityType)
         {
             BaseNode joinNode = GetRootNode();
-            return joinNode.FindInChildren(bizObjectType, true);
+            return joinNode.FindInChildren(entityType, true);
         }
 
         public BaseNode GetRootNode()
@@ -66,7 +66,7 @@ namespace Spolty.Framework.Parameters.BaseNode
             {
                 foreach (BaseNode childNode in _childNodes)
                 {
-                    if (childNode.BizObjectType == type)
+                    if (childNode.EntityType == type)
                     {
                         return childNode;
                     }
@@ -93,17 +93,15 @@ namespace Spolty.Framework.Parameters.BaseNode
         {
             foreach (BaseNode childNode in childNodes)
             {
-                if (childNode.BizObjectType == bizObjectType)
+                if (childNode.EntityType == bizObjectType)
                 {
                     return childNode;
                 }
-                else
+                
+                BaseNode node = FindInChildren((IEnumerable<BaseNode>) childNode.ChildNodes, bizObjectType);
+                if (node != null)
                 {
-                    BaseNode node = FindInChildren((IEnumerable<BaseNode>) childNode.ChildNodes, bizObjectType);
-                    if (node != null)
-                    {
-                        return node;
-                    }
+                    return node;
                 }
             }
             return null;
@@ -123,7 +121,7 @@ namespace Spolty.Framework.Parameters.BaseNode
             {
                 if (GetHashCode() == val2.GetHashCode())
                 {
-                    return _bizObjectType == val2._bizObjectType;
+                    return _entityType == val2._entityType;
                 }
             }
             return false;
@@ -138,7 +136,7 @@ namespace Spolty.Framework.Parameters.BaseNode
         ///<filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            int result = _bizObjectType.GetHashCode();
+            int result = _entityType.GetHashCode();
             return result;
         }
 		
@@ -154,7 +152,7 @@ namespace Spolty.Framework.Parameters.BaseNode
         ///<param name="x">The first object to compare.</param>
         public int Compare(BaseNode x, BaseNode y)
         {
-            return x.BizObjectType.GetHashCode() - y.BizObjectType.GetHashCode();
+            return x.EntityType.GetHashCode() - y.EntityType.GetHashCode();
         }
 
         #endregion

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
+using Spolty.Framework.Parameters.Conditionals.Enums;
 
 namespace Spolty.Framework.Parameters.Conditionals
 {
@@ -82,6 +84,30 @@ namespace Spolty.Framework.Parameters.Conditionals
             return
                 new OrCondition(LeftCondition != null ? (BaseCondition) LeftCondition.Clone() : null,
                                 RightCondition != null ? (BaseCondition) RightCondition.Clone() : null);
+        }
+
+        public static OrCondition Create(string fieldName, object[] values)
+        {
+            return Create(fieldName, values, ConditionOperator.EqualTo, null);
+        }
+
+        public static OrCondition Create(string fieldName, object[] values, ConditionOperator @operator)
+        {
+            return Create(fieldName, values, @operator, null);
+        }
+        public static OrCondition Create(string fieldName, object[] values, ConditionOperator @operator, Type entityType)
+        {
+            Checker.CheckArgumentNull(fieldName, "fieldName");
+
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentNullException("values");
+            }
+
+            var conditionList = new ConditionList();
+            conditionList.AddConditions(fieldName, values, @operator, entityType);
+
+            return new OrCondition(conditionList);
         }
     }
 }

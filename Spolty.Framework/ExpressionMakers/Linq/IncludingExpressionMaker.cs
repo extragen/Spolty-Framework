@@ -28,7 +28,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             MemberExpression memberExpression = null;
             if (rootNode.ParentNode == null &&
                 !rootNode.Including &&
-                sourceType != rootNode.BizObjectType)
+                sourceType != rootNode.EntityType)
             {
                 var memberInfos =
                     new List<MemberInfo>(sourceType.FindMembers(MemberTypes.Field | MemberTypes.Property,
@@ -42,7 +42,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 MemberInfo memberInfo = memberInfos[0];
                 if (memberInfo == null)
                 {
-                    throw new SpoltyException(String.Format("Member {0} not found", rootNode.BizObjectType.Name));
+                    throw new SpoltyException(String.Format("Member {0} not found", rootNode.EntityType.Name));
                 }
                 if (memberInfo is PropertyInfo)
                 {
@@ -78,10 +78,10 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     else
                     {
                         property =
-                            GetPropertyExpression(childNode.ParentNode.BizObjectType, childNode.PropertyName,
+                            GetPropertyExpression(childNode.ParentNode.EntityType, childNode.PropertyName,
                                                   memberExpression);
                     }
-                    newExpression = MakeIncluding(childNode.BizObjectType, property, childNode);
+                    newExpression = MakeIncluding(childNode.EntityType, property, childNode);
                 }
                 else
                 {
@@ -109,7 +109,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         private static bool Filter(MemberInfo mi, object filterCriteria)
         {
-            return ReflectionHelper.GetMemberType(mi) == ((BaseNode) filterCriteria).BizObjectType;
+            return ReflectionHelper.GetMemberType(mi) == ((BaseNode) filterCriteria).EntityType;
         }
     }
 }

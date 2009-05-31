@@ -57,7 +57,7 @@ namespace Spolty.Framework.Designers
             Checker.CheckArgumentNull(root, "root");
 
             _context = context;
-            ElementType = root.BizObjectType;
+            ElementType = root.EntityType;
 
             InitializeQueryable();
             AddJoin(root);
@@ -171,9 +171,9 @@ namespace Spolty.Framework.Designers
         {
             Checker.CheckArgumentNull(rootNode, "rootNode");
 
-            if (rootNode.BizObjectType != ElementType)
+            if (rootNode.EntityType != ElementType)
             {
-                throw new SpoltyException("BizObjectType of root node mismatch ElementType");
+                throw new SpoltyException("EntityType of root node mismatch ElementType");
             }
 
             OrderingList orderings;
@@ -200,7 +200,7 @@ namespace Spolty.Framework.Designers
             {
                 if (childNode.ChildNodes.Count > 0)
                 {
-                    var queryDesinger = new QueryDesinger(_context, childNode.BizObjectType);
+                    var queryDesinger = new QueryDesinger(_context, childNode.EntityType);
                     queryDesinger.AddConditions(conditions);
                     queryDesinger.AddOrderings(orderings);
 
@@ -211,7 +211,7 @@ namespace Spolty.Framework.Designers
                 }
                 else
                 {
-                    var queryDesinger = new QueryDesinger(_context, childNode.BizObjectType);
+                    var queryDesinger = new QueryDesinger(_context, childNode.EntityType);
                     queryDesinger.AddConditions(childNode.Conditions);
                     queryDesinger.AddOrderings(orderings);
 

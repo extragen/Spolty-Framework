@@ -461,7 +461,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     if (childNode.ConditionAggregateMethod.Count > 0)
                     {
                         ConditionList aggregateConditions =
-                            conditions.AggregateConditions(childNode.BizObjectType);
+                            conditions.AggregateConditions(childNode.EntityType);
                         if (aggregateConditions.Count > 0)
                         {
                             Expression groupJoinExpression =

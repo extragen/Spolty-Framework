@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Spolty.Framework.Parameters.Conditionals.Enums;
 
 namespace Spolty.Framework.Parameters.Conditionals
 {
@@ -83,5 +84,35 @@ namespace Spolty.Framework.Parameters.Conditionals
             }
             return lw;
         }
+
+        public void AddConditions(string fieldName, object[] values)
+        {
+            AddConditions(fieldName, values, ConditionOperator.EqualTo, null);
+        }
+
+        public void AddConditions(string fieldName, object[] values,
+                                                            ConditionOperator @operator)
+        {
+            AddConditions(fieldName, values, @operator, null);
+        }
+
+        public void AddConditions(string fieldName, object[] values, ConditionOperator @operator, Type entityType)
+        {
+            if (fieldName == null)
+            {
+                throw new ArgumentNullException("fieldName");
+            }
+
+            if (values == null || values.Length == 0)
+            {
+                throw new ArgumentNullException("values");
+            }
+
+            foreach (object value in values)
+            {
+                Add(new Condition(fieldName, value, @operator, entityType));
+            }
+        }
+
     }
 }
