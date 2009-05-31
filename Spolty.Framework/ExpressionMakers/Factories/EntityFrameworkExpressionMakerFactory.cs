@@ -33,6 +33,31 @@ namespace Spolty.Framework.ExpressionMakers.Factories
             return new ConditionExpressionMaker(this);
         }
 
+        public ISkipExpressionMaker CreateSkipExpressionMaker()
+        {
+            return new ExpressionMaker(this);
+        }
+
+        public ITakeExpressionMaker CreateTakeExpressionMaker()
+        {
+            return new ExpressionMaker(this);
+        }
+
+        public IExceptExpressionMaker CreateExceptExpressionMaker()
+        {
+            return new ExpressionMaker(this);
+        }
+
+        public IUnionExpressionMaker CreateUnionExpressionMaker()
+        {
+            return new ExpressionMaker(this);
+        }
+
+        public IDistinctExpressionMaker CreateDistinctExpressionMaker()
+        {
+            return new ExpressionMaker(this);
+        }
+
         public IQueryable GetTable(Type entityType)
         {
             var context = ((ObjectContext) CurrentContext);

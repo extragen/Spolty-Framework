@@ -64,6 +64,8 @@
     <Compile Include="ConfigurationSections\FactoryConfigurationCollection.cs" />
     <Compile Include="ConfigurationSections\SpoltyFrameworkSectionHandler.cs" />
     <Compile Include="Exceptions\SArgumentNullException.cs" />
+    <Compile Include="ExpressionMakers\EntityFramework\PredicateConstants.cs" />
+    <Compile Include="ExpressionMakers\EntityFramework\PredicateMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\AggregateExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ConditionExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ExpressionMaker.cs" />

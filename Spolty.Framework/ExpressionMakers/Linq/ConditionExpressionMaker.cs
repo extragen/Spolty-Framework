@@ -20,9 +20,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         #region IConditionExpressionMaker Members
 
-        public Expression Make(
-            Expression sourceExpression,
-            IEnumerable<BaseCondition> conditionals)
+        public Expression Make(IEnumerable<BaseCondition> conditionals, Expression sourceExpression)
         {
             if (conditionals == null)
             {
@@ -264,8 +262,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
                             IQueryable innerSource = Factory.GetTable(pi.PropertyType.GetGenericArguments()[0]);
 
-                            Expression innerExpression = Make(innerSource.Expression,
-                                                              innerConditions);
+                            Expression innerExpression = Make(innerConditions, innerSource.Expression);
 
                             //TODO: new JoinExpressionMaker(Factory).MakeInnerJoin
                             sourceExpression = new JoinExpressionMaker(Factory).MakeInnerJoin(sourceExpression, innerExpression,

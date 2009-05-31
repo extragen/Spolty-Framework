@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
 using Spolty.Framework.Helpers;
@@ -11,13 +12,16 @@ using Spolty.Framework.Storages;
 
 namespace Spolty.Framework.ExpressionMakers.Linq
 {
-    internal class ExpressionMaker : IExpressionMaker
+    internal class ExpressionMaker : IExpressionMaker, ISkipExpressionMaker, ITakeExpressionMaker, IUnionExpressionMaker,
+                                     IExceptExpressionMaker, IDistinctExpressionMaker
     {
         private const string ParameterDictionaryKey = "ParameterDictionary";
-        protected static Type QueryableType;
         protected static Type EnumerableType;
         protected static Type IEnumerableType;
+        protected static Type QueryableType;
         private readonly IExpressionMakerFactory _factory;
+
+        #region Constructors
 
         static ExpressionMaker()
         {
@@ -31,36 +35,23 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             _factory = factory;
         }
 
+        #endregion
+
+        #region IExpressionMaker Members
+
         public IExpressionMakerFactory Factory
         {
             get { return _factory; }
         }
 
-        #region Simple 
+        #endregion
 
-        internal static Expression MakeTake(Expression source, int take)
+        #region IExceptExpressionMaker Members
+
+        Expression IExceptExpressionMaker.Make(Expression source, Expression except)
         {
-            if (source == null)
-            {
-                throw new SpoltyException("SourceExpression not defined");
-            }
-
-            //TODO: for sequence
-            return CallQueryableMethod("Take", new[] { source.Type }, source, Expression.Constant(take));
-            //return QueryExpression.Take(source, Expression.Constant(take));
-        }
-
-        internal static Expression MakeExcept(Expression source, Expression except)
-        {
-            if (source == null)
-            {
-                throw new SpoltyException("source not defined");
-            }
-
-            if (except == null)
-            {
-                throw new SpoltyException("except not defined");
-            }
+            Checker.CheckArgumentNull(source, "source");
+            Checker.CheckArgumentNull(except, "except");
 
             Type sourceType = GetTemplateType(source);
             Type exceptType = GetTemplateType(except);
@@ -70,21 +61,44 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException("Type of source mismatch type of except");
             }
 
-            return CallQueryableMethod("Except", new[] { source.Type }, source, except);
+            return CallQueryableMethod("Except", new[] {source.Type}, source, except);
             //return QueryExpression.Except(source, except);
         }
-        
-        internal static Expression MakeUnion(Expression source, Expression union)
-        {
-            if (source == null)
-            {
-                throw new SpoltyException("source not defined");
-            }
 
-            if (union == null)
-            {
-                throw new SpoltyException("except not defined");
-            }
+        #endregion
+
+        #region ISkipExpressionMaker Members
+
+        Expression ISkipExpressionMaker.Make(int skip, Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
+
+            //TODO: for sequence
+            return CallQueryableMethod("Skip", new[] { GetTemplateType(source) }, source, Expression.Constant(skip));
+            //return QueryExpression.Skip(source, Expression.Constant(skip));
+        }
+
+        #endregion
+
+        #region ITakeExpressionMaker Members
+
+        Expression ITakeExpressionMaker.Make(int take, Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
+
+            //TODO: for sequence
+            return CallQueryableMethod("Take", new[] { GetTemplateType(source)}, source, Expression.Constant(take));
+            //return QueryExpression.Take(source, Expression.Constant(take));
+        }
+
+        #endregion
+
+        #region IUnionExpressionMaker Members
+
+        Expression IUnionExpressionMaker.Make(Expression source, Expression union)
+        {
+            Checker.CheckArgumentNull(source, "source");
+            Checker.CheckArgumentNull(union, "union");
 
             Type sourceType = GetTemplateType(source);
             Type exceptType = GetTemplateType(union);
@@ -94,19 +108,19 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException("Type of source mismatch type of union");
             }
 
-            return CallQueryableMethod("Union", new[] { source.Type }, source, union);
+            return CallQueryableMethod("Union", new[] { sourceType }, source, union);
             //return QueryExpression.Except(source, except);
         }
 
-        internal static Expression MakeSkip(Expression source, int skip)
+        #endregion
+
+        #region Implementation of IDistinctExpressionMaker
+
+        Expression IDistinctExpressionMaker.Make(Expression source)
         {
-            if (source == null)
-            {
-                throw new SpoltyException("SourceExpression not defined");
-            }
-            //TODO: for sequence
-            return CallQueryableMethod("Skip", new[] { source.Type }, source, Expression.Constant(skip));
-            //return QueryExpression.Skip(source, Expression.Constant(skip));
+            Checker.CheckArgumentNull(source, "source");
+
+            return CallQueryableMethod("Distinct", new[] { GetTemplateType(source) }, source);
         }
 
         #endregion
@@ -116,19 +130,19 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         internal static Type GetTemplateType(Expression sourceExpression)
         {
             const int templateIndex = 0;
-            
+
             if (!sourceExpression.Type.IsGenericType)
             {
                 return sourceExpression.Type;
             }
 
             Type[] genericArguments = sourceExpression.Type.GetGenericArguments();
-            
+
             if (genericArguments.Length == 0)
             {
                 throw new ArgumentException("sourceExpression is not generic source");
             }
-            
+
             return genericArguments[templateIndex];
         }
 
@@ -228,17 +242,18 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return false;
         }
 
-        protected internal static Expression CallQueryableMethod(String methodName, Type[] typeArguments, params Expression[] arguments)
+        protected internal static Expression CallQueryableMethod(String methodName, Type[] typeArguments,
+                                                                 params Expression[] arguments)
         {
             return Expression.Call(QueryableType, methodName, typeArguments, arguments);
         }
 
-        protected internal static Expression CallEnumerableMethod(String methodName, Type[] typeArguments, params Expression[] arguments)
+        protected internal static Expression CallEnumerableMethod(String methodName, Type[] typeArguments,
+                                                                  params Expression[] arguments)
         {
             return Expression.Call(EnumerableType, methodName, typeArguments, arguments);
         }
 
         #endregion
-
     }
 }

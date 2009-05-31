@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
 using Spolty.Framework.Activators;
@@ -10,11 +9,10 @@ using Spolty.Framework.ConfigurationSections;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers;
 using Spolty.Framework.ExpressionMakers.Factories;
-using Spolty.Framework.ExpressionMakers.Linq;
 using Spolty.Framework.Parameters;
+using Spolty.Framework.Parameters.BaseNode;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Joins;
-using Spolty.Framework.Parameters.Loads;
 using Spolty.Framework.Parameters.Orderings;
 using Spolty.Framework.Parsers;
 
@@ -25,9 +23,8 @@ namespace Spolty.Framework.Designers
         #region Private Fields
 
         private readonly object _context;
-        private IExpressionMakerFactory _expressionMakerFactory;
         private Expression _expression;
-        private List<LambdaExpression> _loadLambdaExpressions;
+        private IExpressionMakerFactory _expressionMakerFactory;
 
         #endregion
 
@@ -35,20 +32,7 @@ namespace Spolty.Framework.Designers
 
         public IEnumerator GetEnumerator()
         {
-            DataLoadOptions options = null;
-
-            if (_loadLambdaExpressions != null && _loadLambdaExpressions.Count > 0)
-            {
-                options = new DataLoadOptions();
-                foreach (LambdaExpression lambdaExpression in _loadLambdaExpressions)
-                {
-                    options.LoadWith(lambdaExpression);
-                }
-            }
-
-//            _context.LoadOptions = options;
             object returnValue = Provider.Execute(_expression);
-//            _context.LoadOptions = null;
 
             return ((IEnumerable) returnValue).GetEnumerator();
         }
@@ -105,39 +89,70 @@ namespace Spolty.Framework.Designers
 
         #endregion
 
-        public QueryDesinger AddConditions(ConditionList conditionals)
+        #region Conditons methods
+
+        public QueryDesinger AddConditions(params BaseCondition[] conditions)
         {
-            if (conditionals == null || conditionals.Count == 0)
+            return AddConditions(conditions as IEnumerable<BaseCondition>);
+        }
+
+        public QueryDesinger AddConditions(IEnumerable<BaseCondition> conditions)
+        {
+            if (conditions == null)
             {
                 return this;
             }
 
-            conditionals.RemoveDuplicates();
-
-            _expression = _expressionMakerFactory.CreateConditionExpressionMaker().Make(_expression, conditionals);
-
-            return this;
-        }
-
-        public QueryDesinger AddOrderings(OrderingList orderings)
-        {
-            if (orderings == null || orderings.Count == 0)
+            var conditionList = new ConditionList(conditions);
+            if (conditionList.Count == 0)
             {
                 return this;
             }
 
-            orderings.RemoveDuplicates();
+            conditionList.RemoveDuplicates();
 
-            _expression = _expressionMakerFactory.CreateOrderingExpressionMaker().Make(_expression, orderings);
+            _expression = _expressionMakerFactory.CreateConditionExpressionMaker().Make(conditions, _expression);
 
             return this;
         }
+
+        #endregion
+
+        #region Orderings methods
+
+        public QueryDesinger AddOrderings(params Ordering[] orderings)
+        {
+            return AddOrderings(orderings as IEnumerable<Ordering>);
+        }
+
+        public QueryDesinger AddOrderings(IEnumerable<Ordering> orderings)
+        {
+            if (orderings == null)
+            {
+                return this;
+            }
+
+            var orderingList = new OrderingList(orderings);
+            if (orderingList.Count == 0)
+            {
+                return this;
+            }
+
+            orderingList.RemoveDuplicates();
+
+            _expression = _expressionMakerFactory.CreateOrderingExpressionMaker().Make(orderings, _expression);
+
+            return this;
+        }
+
+        #endregion
 
         public QueryDesinger Except(IQueryable exceptQueryable)
         {
             Checker.CheckArgumentNull(exceptQueryable, "exceptQueryable");
 
-            _expression = ExpressionMaker.MakeExcept(_expression, exceptQueryable.Expression);
+            _expression = _expressionMakerFactory.CreateExceptExpressionMaker().Make(_expression,
+                                                                                    exceptQueryable.Expression);
 
             return this;
         }
@@ -146,7 +161,8 @@ namespace Spolty.Framework.Designers
         {
             Checker.CheckArgumentNull(unionQueryable, "unionQueryable");
 
-            _expression = ExpressionMaker.MakeUnion(_expression, unionQueryable.Expression);
+            _expression = _expressionMakerFactory.CreateUnionExpressionMaker().Make(_expression,
+                                                                                   unionQueryable.Expression);
 
             return this;
         }
@@ -166,17 +182,17 @@ namespace Spolty.Framework.Designers
             ParametersParser.Parse(out conditions, out orderings);
 
             AddConditions(rootNode.Conditions);
-            
+
             _expression = AddChildren(_expression, rootNode, conditions, orderings);
-            
+
             AddConditions(conditions);
             AddOrderings(orderings);
 
             return this;
         }
 
-        private Expression AddChildren(Expression rootExpression, JoinNode node,
-                                       ConditionList conditions, OrderingList orderings)
+        private Expression AddChildren(Expression rootExpression, BaseNode node,
+                                       ConditionList conditions, IEnumerable<Ordering> orderings)
         {
             Expression newExpression = rootExpression;
             IJoinExpressionMaker maker = _expressionMakerFactory.CreateJoinExpressionMaker();
@@ -230,45 +246,37 @@ namespace Spolty.Framework.Designers
 
         #region Skip And Take
 
-        public void SkipAndTake(int skip, int take)
+        public QueryDesinger SkipAndTake(int skip, int take)
         {
             Skip(skip);
             Take(take);
-        }
-
-        public void Skip(int skip)
-        {
-            _expression = ExpressionMaker.MakeSkip(_expression, skip);
-        }
-
-        public void Take(int take)
-        {
-            _expression = ExpressionMaker.MakeTake(_expression, take);
-        }
-
-        #endregion
-
-        #region Including
-
-        public QueryDesinger LoadTypes(params Type[] includingTypes)
-        {
-            if (includingTypes == null || includingTypes.Length == 0)
-            {
-                return this;
-            }
-
-            _loadLambdaExpressions = IncludingExpressionMaker.MakeIncluding(_expression, includingTypes);
 
             return this;
         }
 
-        public QueryDesinger LoadTypes(LoadTree loadTree)
+        public QueryDesinger Skip(int skip)
         {
-            if (loadTree == null || loadTree.Root == null)
+            if (skip > 0)
             {
-                return this;
+                _expression = _expressionMakerFactory.CreateSkipExpressionMaker().Make(skip, _expression);
             }
-            _loadLambdaExpressions = IncludingExpressionMaker.MakeIncluding(ElementType, _expression, loadTree.Root);
+
+            return this;
+        }
+
+        public QueryDesinger Take(int take)
+        {
+            if (take > 0)
+            {
+                _expression = _expressionMakerFactory.CreateTakeExpressionMaker().Make(take, _expression);
+            }
+
+            return this;
+        }
+
+        public QueryDesinger Distinct()
+        {
+            _expression = _expressionMakerFactory.CreateDistinctExpressionMaker().Make(_expression);
 
             return this;
         }

@@ -17,7 +17,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         #region IOrderingExpressionMaker Members
 
-        public Expression Make(Expression source, IEnumerable<Ordering> orderings)
+        public Expression Make(IEnumerable<Ordering> orderings, Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
             Checker.CheckArgumentNull(orderings, "orderings");
@@ -25,46 +25,44 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
             if (orderings != null && orderingList.Count > 0)
             {
-                Ordering firstOrdering = orderingList[0];
-                string[] properties = firstOrdering.ColumnName.Split('.');
-                Type elementType = GetTemplateType(source);
-
-                if (firstOrdering.ElementType == null || firstOrdering.ElementType == elementType)
+                for (int i = 0; i < orderingList.Count; i++)
                 {
-                    PropertyInfo property = elementType.GetProperty(properties[0]);
+                    Ordering ordering = orderingList[i];
+                    string[] properties = ordering.ColumnName.Split('.');
+                    Type sourceType = GetTemplateType(source);
+                    Type elementType = ordering.ElementType ?? sourceType;
+
+                    PropertyInfo property;
+                    ParameterExpression sourceParameter = GetParameterExpression(sourceType, sourceType.Name);
+                    MemberExpression propertyExpression = null;
+                    if (elementType != sourceType)
+                    {
+                        var relationProperty = sourceType.GetProperty(elementType.Name);
+                        propertyExpression = Expression.Property(sourceParameter, relationProperty);
+                        property = elementType.GetProperty(ordering.ColumnName);
+//                        propertyExpression = Expression.Property(relationPropertyExpression, property);
+                    }
+                    else
+                    {
+                        property = elementType.GetProperty(properties[0]);
+                    }
 
                     if (property != null &&
                         (!property.PropertyType.IsGenericType ||
                          property.PropertyType.GetGenericTypeDefinition() == typeof (Nullable<>)))
                     {
-                        string sourceName = elementType.Name;
-                        ParameterExpression expressionOrder = GetParameterExpression(elementType, sourceName);
 
-                        LambdaExpression orderingExpression = GetLambdaExpression(elementType, firstOrdering.ColumnName,
-                                                                                  expressionOrder, null);
+                        LambdaExpression orderingExpression = GetLambdaExpression(elementType,
+                                                                                  ordering.ColumnName,
+                                                                                  sourceParameter, propertyExpression);
                         var typeArguments = new Type[2];
-                        typeArguments[0] = elementType;
+                        typeArguments[0] = sourceType;
                         typeArguments[1] = orderingExpression.Body.Type;
 
-                        source = firstOrdering.SortDirection == SortDirection.Ascending
+                        source = ordering.SortDirection == SortDirection.Ascending
                                      ? CallQueryableMethod("OrderBy", typeArguments, source, orderingExpression)
                                      : CallQueryableMethod("OrderByDescending", typeArguments, source,
                                                            orderingExpression);
-
-                        if (orderingList.Count > 1)
-                        {
-                            for (int i = 1; i < orderingList.Count; i++)
-                            {
-                                orderingExpression = GetLambdaExpression(elementType, orderingList[i].ColumnName,
-                                                                         expressionOrder, null);
-                                typeArguments[1] = orderingExpression.Body.Type;
-
-                                source = orderingList[i].SortDirection == SortDirection.Ascending
-                                             ? CallQueryableMethod("ThenBy", typeArguments, source, orderingExpression)
-                                             : CallQueryableMethod("ThenByDescending", typeArguments, source,
-                                                                   orderingExpression);
-                            }
-                        }
                     }
                 }
             }
@@ -72,5 +70,6 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         }
 
         #endregion
+
     }
 }
