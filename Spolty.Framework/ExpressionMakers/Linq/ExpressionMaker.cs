@@ -69,26 +69,26 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         #region ISkipExpressionMaker Members
 
-        Expression ISkipExpressionMaker.Make(int skip, Expression source)
+        Expression ISkipExpressionMaker.Make(int count, Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
             //TODO: for sequence
-            return CallQueryableMethod("Skip", new[] { GetTemplateType(source) }, source, Expression.Constant(skip));
-            //return QueryExpression.Skip(source, Expression.Constant(skip));
+            return CallQueryableMethod("Skip", new[] { GetTemplateType(source) }, source, Expression.Constant(count));
+            //return QueryExpression.Skip(source, Expression.Constant(count));
         }
 
         #endregion
 
         #region ITakeExpressionMaker Members
 
-        Expression ITakeExpressionMaker.Make(int take, Expression source)
+        Expression ITakeExpressionMaker.Make(int count, Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
             //TODO: for sequence
-            return CallQueryableMethod("Take", new[] { GetTemplateType(source)}, source, Expression.Constant(take));
-            //return QueryExpression.Take(source, Expression.Constant(take));
+            return CallQueryableMethod("Take", new[] { GetTemplateType(source)}, source, Expression.Constant(count));
+            //return QueryExpression.Take(source, Expression.Constant(count));
         }
 
         #endregion

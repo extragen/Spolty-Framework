@@ -6,7 +6,7 @@ using Spolty.Framework.Parameters.Joins.Enums;
 namespace Spolty.Framework.Parameters.Joins
 {
     [Serializable]
-    public class JoinItem
+    internal class JoinItem
     {
         private Item _left;
         private Item _right;

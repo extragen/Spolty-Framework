@@ -6,7 +6,7 @@ using Spolty.Framework.Parameters.Joins.Enums;
 
 namespace Spolty.Framework.Parameters.Loads
 {
-    public class LoadNode : BaseNode.BaseNode
+    internal class LoadNode : BaseNode.BaseNode
     {
         public const JoinType JoinParentType = JoinType.LeftJoin;
         private readonly string _propertyName;
@@ -42,7 +42,7 @@ namespace Spolty.Framework.Parameters.Loads
         }
 
 
-        public LoadNode(Item item) : base(item.BizObjectType)
+        public LoadNode(Item item) : base(item.EntityType)
         {
             _propertyName = item.PropertyName;
             _childNodes = new BaseNodeList(this);
@@ -97,7 +97,7 @@ namespace Spolty.Framework.Parameters.Loads
             }
             foreach (Item item in items)
             {
-                var child = (LoadNode) FindInChildren(item.BizObjectType);
+                var child = (LoadNode) FindInChildren(item.EntityType);
                 if (child == null)
                 {
                     child = new LoadNode(item);

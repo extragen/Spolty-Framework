@@ -35,12 +35,12 @@ namespace Spolty.Framework.ExpressionMakers
 
     public interface ISkipExpressionMaker : IExpressionMaker
     {
-        Expression Make(int skip, Expression source);
+        Expression Make(int count, Expression source);
     }
 
     public interface ITakeExpressionMaker : IExpressionMaker
     {
-        Expression Make(int take, Expression source);
+        Expression Make(int count, Expression source);
     }
 
     public interface IExceptExpressionMaker : IExpressionMaker

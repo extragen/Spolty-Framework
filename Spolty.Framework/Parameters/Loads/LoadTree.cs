@@ -1,6 +1,6 @@
 namespace Spolty.Framework.Parameters.Loads
 {
-    public class LoadTree : IParameterMarker
+    internal class LoadTree : IParameterMarker
     {
         private LoadNode _root;
 

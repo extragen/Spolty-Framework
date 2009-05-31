@@ -1,6 +1,6 @@
 namespace Spolty.Framework.Parameters.Paging
 {
-    public class PagingParameter : IParameterMarker
+    internal class PagingParameter : IParameterMarker
     {
         private int _pageNumber;
         private int _pageSize;

@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Spolty")]
 [assembly: AssemblyProduct("Spolty.Framework")]
-[assembly: AssemblyCopyright("Copyright ©  2008 Spolty - Viacheslav Boretskyi")]
+[assembly: AssemblyCopyright("Copyright ©  2008 Spolty - Viacheslav Boretskyi (Vyacheslav Boretskiy)")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

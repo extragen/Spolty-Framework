@@ -4,15 +4,15 @@ using System.Collections.ObjectModel;
 
 namespace Spolty.Framework.Parameters.Joins
 {
-    public class Item
+    internal class Item
     {
-        private readonly Type _bizObjectType;
+        private readonly Type _entityType;
         private readonly string _propertyName;
         private readonly List<string> _fields = new List<string>();
 
-        public Type BizObjectType
+        public Type EntityType
         {
-            get { return _bizObjectType; }
+            get { return _entityType; }
         }
 
         public string PropertyName
@@ -31,7 +31,7 @@ namespace Spolty.Framework.Parameters.Joins
 
         public Item(Type bizObjectType, string propertyName)
         {
-            _bizObjectType = bizObjectType;
+            _entityType = bizObjectType;
             _propertyName = propertyName;
         }
 
@@ -55,7 +55,7 @@ namespace Spolty.Framework.Parameters.Joins
             {
                 if (GetHashCode() == val2.GetHashCode())
                 {
-                    return _bizObjectType == val2._bizObjectType && _propertyName == val2._propertyName;
+                    return _entityType == val2._entityType && _propertyName == val2._propertyName;
                 }
             }
             return false;
@@ -70,7 +70,7 @@ namespace Spolty.Framework.Parameters.Joins
         ///<filterpriority>2</filterpriority>
         public override int GetHashCode()
         {
-            int result = _bizObjectType.GetHashCode();
+            int result = _entityType.GetHashCode();
             result ^= _propertyName.GetHashCode();
             return result;
         }

@@ -10,13 +10,14 @@ using Spolty.Framework.Designers;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
 using Spolty.Framework.Parameters.Joins;
+using Spolty.Framework.Parameters.Joins.Enums;
 using Spolty.Framework.Parameters.Orderings;
 using Spolty.Framework.Parameters.Orderings.Enums;
 
 namespace Linq.Test
 {
     [TestFixture]
-    public class QueryDesignerJoinTest
+    public class QueryDesignerTest
     {
         private readonly NorthwindDataContext context = new NorthwindDataContext(ConnectionString.ConnectionString);
         private readonly SqlConnection _connection = new SqlConnection(ConnectionString.ConnectionString);
@@ -26,7 +27,7 @@ namespace Linq.Test
             get { return ConfigurationManager.ConnectionStrings["NorthwindConnectionString"]; }
         }
 
-        ~QueryDesignerJoinTest()
+        ~QueryDesignerTest()
         {
             if (context != null)
             {
@@ -94,6 +95,30 @@ namespace Linq.Test
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
             root.AddChildren(new JoinNode(typeof (Category), "Products"));
+
+            var queryDesinger = new QueryDesinger(context, root);
+            var list = new List<Product>(queryDesinger.Cast<Product>());
+
+            // check numbers of entity
+            Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID";
+
+            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
+        }
+
+        [Test]
+        public void TestJoinWithOneChildByAssociationFileds()
+        {
+            const int resultRowCount = 77;
+            //create root node
+            var root = new JoinNode(typeof(Product));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            root.AddChildren(new JoinNode(typeof(Category), new[] { "CategoryID" }, new[] { "CategoryID" }));
 
             var queryDesinger = new QueryDesinger(context, root);
             var list = new List<Product>(queryDesinger.Cast<Product>());
@@ -328,7 +353,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, root);
-            queryDesinger.SkipAndTake(10, 10);
+            queryDesinger.Skip(10).Take(10);
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
         }
@@ -502,13 +527,15 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
         /// SELECT  DISTINCT  Products.ProductID, Products.ProductName, Products.SupplierID, Products.CategoryID, Products.QuantityPerUnit, Products.UnitPrice, Products.UnitsInStock, Products.UnitsOnOrder, Products.ReorderLevel, Products.Discontinued 
         /// FROM         Orders 
         ///         INNER JOIN [Order Details] ON Orders.OrderID = [Order Details].OrderID 
-        ///         INNER JOIN Products ON [Order Details].ProductID = Products.ProductID 
-        ///         INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID 
-        ///         INNER JOIN EmployeeTerritories ON Employees.EmployeeID = EmployeeTerritories.EmployeeID 
-        ///         INNER JOIN Territories ON EmployeeTerritories.TerritoryID = Territories.TerritoryID 
-        ///         INNER JOIN Region ON Territories.RegionID = Region.RegionID
+        ///             INNER JOIN Products ON [Order Details].ProductID = Products.ProductID 
+        ///                 INNER JOIN Employees ON Orders.EmployeeID = Employees.EmployeeID 
+        ///                   INNER JOIN EmployeeTerritories ON Employees.EmployeeID = EmployeeTerritories.EmployeeID 
+        ///                     INNER JOIN Territories ON EmployeeTerritories.TerritoryID = Territories.TerritoryID 
+        ///                       INNER JOIN Region ON Territories.RegionID = Region.RegionID
+        ///         LEFT OUTER JOIN Categories ON Products.CategoryID = Categories.CategoryID 
+        ///         INNER JOIN Suppliers ON Products.SupplierID = Suppliers.SupplierID
         /// WHERE     (Region.RegionID = 4) AND (Territories.TerritoryDescription like 'Orlando%') AND 
-        ///             (Products.CategoryID IN (4, 5, 6)) 
+        ///             (Categories.CategoryID IN (4, 5, 6)) 
         ///  
         /// result of that script it's 23 rows that why I test row count equal 23
         /// 
@@ -524,9 +551,10 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
         ///                 INNER JOIN ([dbo].[Territories] AS [t5]
         ///                     INNER JOIN [dbo].[Region] AS [t6] ON [t5].[RegionID] = [t6].[RegionID]) ON [t4].[TerritoryID] = [t5].[TerritoryID]) ON [t3].[EmployeeID] = [t4].[EmployeeID]) ON [t2].[EmployeeID] 
         ///  = [t3].[EmployeeID]) ON [t1].[OrderID] = [t2].[OrderID]) ON [t0].[ProductID] = [t1].[ProductID]
-        ///  WHERE (([t0].[CategoryID] = @p0) OR ([t0].[CategoryID] = @p1) OR ([t0].[CategoryID] = @p2)) AND ([t5].[TerritoryDescription] LIKE @p3) AND ([t6].[RegionID] = @p4)',N'@p0 int,@p1 int,@p2 int,@p3 
-        ///  nvarchar(8),@p4 int',@p0=4,@p1=6,@p2=5,@p3=N'Orlando%',@p4=4
-        ///        
+        ///  LEFT OUTER JOIN [dbo].[Categories] AS [t7] ON [t0].[CategoryID] = [t7].[CategoryID]
+        ///  INNER JOIN [dbo].[Suppliers] AS [t8] ON [t0].[SupplierID] = [t8].[SupplierID]
+        /// WHERE (([t7].[CategoryID] = @p0) OR ([t7].[CategoryID] = @p1) OR ([t7].[CategoryID] = @p2)) AND ([t5].[TerritoryDescription] LIKE @p3) AND ([t6].[RegionID] = @p4)',
+        /// N'@p0 int,@p1 int,@p2 int,@p3 nvarchar(8),@p4 int',@p0=4,@p1=6,@p2=5,@p3=N'Orlando%',@p4=4
         /// </summary>
         [Test]
         public void TestComplicatedJoinWithFilters()
@@ -541,7 +569,9 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // because Order_Detail linked with Product by next property:
             // public Product Product - name of property is equal name of type 
             var orderDetailNode = new JoinNode(typeof (Order_Detail));
-            root.AddChildren(orderDetailNode);
+            var categoryNode = new JoinNode(typeof (Category), JoinType.LeftJoin);
+            var supplierNode = new JoinNode(typeof (Supplier));
+            root.AddChildren(orderDetailNode, categoryNode, supplierNode);
 
             var orderNode = new JoinNode(typeof (Order));
             orderDetailNode.AddChildren(orderNode);
@@ -564,7 +594,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var regionCondition = new Condition("RegionID", regionId, ConditionOperator.EqualTo, typeof (Region));
             var territoryCondition = new Condition("TerritoryDescription", territoryDescription,
                                                    ConditionOperator.StartsWith, typeof (Territory));
-            OrCondition categoryIDsCondition = OrCondition.Create("CategoryID", new object[] {4, 5, 6});
+            OrCondition categoryIDsCondition = OrCondition.Create("CategoryID", new object[] {4, 5, 6}, ConditionOperator.EqualTo, typeof(Category));
 
             var conditionals = new ConditionList(regionCondition, territoryCondition, categoryIDsCondition);
 

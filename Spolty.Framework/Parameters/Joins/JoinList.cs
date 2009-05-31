@@ -6,7 +6,7 @@ using Spolty.Framework.Parameters.Conditionals;
 namespace Spolty.Framework.Parameters.Joins
 {
     [Serializable]
-    public class JoinList : List<JoinItem>
+    internal class JoinList : List<JoinItem>
     {
         #region Constructors
 
@@ -49,12 +49,12 @@ namespace Spolty.Framework.Parameters.Joins
             if (current.Count > 0)
             {
                 current.RemoveDuplicates();
-                parentNode = new JoinNode(current[0].Left.BizObjectType);
-                JoinNode joinNode = new JoinNode(current[0].Right.BizObjectType, current[0].JoinType, current[0].Left.Fields, current[0].Right.Fields);
+                parentNode = new JoinNode(current[0].Left.EntityType);
+                JoinNode joinNode = new JoinNode(current[0].Right.EntityType, current[0].JoinType, current[0].Left.Fields, current[0].Right.Fields);
                 parentNode.ChildNodes.Add(joinNode);
                 for (int index = 1; index < current.Count; index++)
                 {
-                    Type leftBizObjType = current[index].Left.BizObjectType;
+                    Type leftBizObjType = current[index].Left.EntityType;
                     if (parentNode.EntityType == leftBizObjType)
                     {
                         joinNode = parentNode;
@@ -67,7 +67,7 @@ namespace Spolty.Framework.Parameters.Joins
                             throw new SpoltyException("joinNode is not found");
                         }
                     }
-                    joinNode.ChildNodes.Add(new JoinNode(current[index].Right.BizObjectType, current[index].JoinType, current[index].Left.Fields, current[index].Right.Fields));
+                    joinNode.ChildNodes.Add(new JoinNode(current[index].Right.EntityType, current[index].JoinType, current[index].Left.Fields, current[index].Right.Fields));
                 }
             }
             return parentNode;

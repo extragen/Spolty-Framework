@@ -10,9 +10,9 @@ using Spolty.Framework.Parameters.Joins.Enums;
 
 namespace Spolty.Framework.Parameters.Joins
 {
-    public class JoinNode : BaseNode.BaseNode, IParameterMarker
+    public class JoinNode : BaseNode.BaseNode
     {
-        private readonly List<AggregateMethod> _conditionAggregateMethod;
+        internal readonly List<AggregateMethod> _conditionAggregateMethod;
         private readonly ConditionList _conditions = new ConditionList();
         private readonly List<string> _currentFieldsNames;
         private readonly bool _isTypeNameEqualPropertyName;
@@ -196,10 +196,7 @@ namespace Spolty.Framework.Parameters.Joins
             get { return _isTypeNameEqualPropertyName; }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public ReadOnlyCollection<AggregateMethod> ConditionAggregateMethod
+        internal ReadOnlyCollection<AggregateMethod> ConditionAggregateMethod
         {
             get { return _conditionAggregateMethod.AsReadOnly(); }
         }
@@ -233,12 +230,7 @@ namespace Spolty.Framework.Parameters.Joins
             get { return _conditions; }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entityType"></param>
-        /// <param name="aggregateMethod"></param>
-        public void SetAggregateMethod(Type entityType, AggregateMethod aggregateMethod)
+        internal void SetAggregateMethod(Type entityType, AggregateMethod aggregateMethod)
         {
             var node = (JoinNode) FindInChildren(entityType, true);
             if (node == null)
