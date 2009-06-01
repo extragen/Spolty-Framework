@@ -61,8 +61,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException("Type of source mismatch type of except");
             }
 
-            return CallQueryableMethod("Except", new[] {source.Type}, source, except);
-            //return QueryExpression.Except(source, except);
+            return CallQueryableMethod("Except", new[] { sourceType }, source, except);
         }
 
         #endregion
@@ -155,6 +154,18 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             }
 
             return Expression.Property(parameter, propertyInfo);
+        }
+
+        internal static bool ContainsParameterExpression(Type type)
+        {
+            var parametersDictionary =
+                (Dictionary<Type, ParameterExpression>)ThreadStorage.Current[ParameterDictionaryKey];
+            if (parametersDictionary == null)
+            {
+                parametersDictionary = new Dictionary<Type, ParameterExpression>();
+                ThreadStorage.Current[ParameterDictionaryKey] = parametersDictionary;
+            }
+            return parametersDictionary.ContainsKey(type);
         }
 
         internal static ParameterExpression GetParameterExpression(Type type, string name)

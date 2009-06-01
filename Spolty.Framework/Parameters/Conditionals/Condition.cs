@@ -22,20 +22,41 @@ namespace Spolty.Framework.Parameters.Conditionals
 
         #region Constructors
 
+        /// <summary>
+        /// Creates condition. Used only for serialization.
+        /// </summary>
         public Condition()
         {
         }
 
+        /// <summary>
+        /// Creates condition with <see cref="ConditionOperator.EqualTo"/> and not defined <see cref="ElementType"/>.
+        /// </summary>
+        /// <param name="fieldName">name of a field which mapped with table</param>
+        /// <param name="value"></param>
         public Condition(string fieldName, object value)
             : this(fieldName, value, ConditionOperator.EqualTo, null)
         {
         }
 
+        /// <summary>
+        /// Creates condition with not defined <see cref="ElementType"/>. 
+        /// </summary>
+        /// <param name="fieldName">name of a field which mapped with table.</param>
+        /// <param name="value"></param>
+        /// <param name="condOperator"></param>
         public Condition(string fieldName, object value, ConditionOperator condOperator)
             : this(fieldName, value, condOperator, null)
         {
         }
 
+        /// <summary>
+        /// Creates condition to concrete <see cref="ElementType"/>.
+        /// </summary>
+        /// <param name="fieldName">name of a field which mapped with table.</param>
+        /// <param name="value"></param>
+        /// <param name="condOperator"></param>
+        /// <param name="elementType">defines filtering Entity.</param>
         public Condition(string fieldName, object value, ConditionOperator condOperator, Type elementType)
             : base(condOperator)
         {
@@ -68,6 +89,9 @@ namespace Spolty.Framework.Parameters.Conditionals
             set { _value = value; }
         }
 
+        /// <summary>
+        /// Gets or sets filtering entity type
+        /// </summary>
         [XmlAttribute("elementType")]
         public Type ElementType
         {

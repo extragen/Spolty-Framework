@@ -21,7 +21,7 @@ namespace Spolty.Framework.Designers
     /// <summary>
     /// QueryDesigner class 
     /// </summary>
-    public class QueryDesinger : IQueryable, IEnumerable
+    public class QueryDesinger : IQueryable, IEnumerable, ICloneable
     {
         #region Private Fields
 
@@ -73,11 +73,13 @@ namespace Spolty.Framework.Designers
         #region Constructors
 
         /// <summary>
-        /// 
+        /// Creates <see cref="QueryDesinger"/> by <see cref="JoinNode"/> tree. 
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="root"></param>
-        public QueryDesinger(object context, JoinNode root)
+        /// <param name="context">object context.</param>
+        /// <param name="root">root <see cref="JoinNode"/>. Defines result type of <see cref="T:System.Linq.IQueryProvider"/> ElementType</param>
+        /// <param name="parameters">additional parameters <see cref="IParameterMarker"/> use for creation 
+        /// additional condition <see cref="ConditionList"/> and/or ordering <see cref="OrderingList"/>.</param>
+        public QueryDesinger(object context, JoinNode root, params IParameterMarker[] parameters)
         {
             Checker.CheckArgumentNull(context, "context");
             Checker.CheckArgumentNull(root, "root");
@@ -86,14 +88,14 @@ namespace Spolty.Framework.Designers
             ElementType = root.EntityType;
 
             InitializeQueryable();
-            AddJoin(root);
+            AddJoins(root, parameters);
         }
 
         /// <summary>
-        /// 
+        /// Creates <see cref="QueryDesinger"/> by type of entity from context.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="entityType"></param>
+        /// <param name="context">object context.</param>
+        /// <param name="entityType">type of entity.</param>
         public QueryDesinger(object context, Type entityType)
         {
             Checker.CheckArgumentNull(context, "context");
@@ -106,10 +108,11 @@ namespace Spolty.Framework.Designers
         }
 
         /// <summary>
-        /// 
+        /// Creates <see cref="QueryDesinger"/> by <see cref="IQueryable"/>.
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="queryable"></param>
+        /// <param name="context">object context</param>
+        /// <param name="queryable">already formed queryable. 
+        /// It can be Linq To Sql formed query or formed by <see cref="QueryDesinger"/></param>
         public QueryDesinger(object context, IQueryable queryable)
         {
             Checker.CheckArgumentNull(context, "context");
@@ -128,21 +131,20 @@ namespace Spolty.Framework.Designers
         #region Conditons methods
 
         /// <summary>
-        /// 
+        /// Adds to current <see cref="QueryDesinger"/> additional conditions.
         /// </summary>
-        /// <param name="conditions"></param>
-        /// <returns>Current <see cref="QueryDesinger"> that filtered by conditions. </returns>
+        /// <param name="conditions">additional conditions.</param>
+        /// <returns>Current <see cref="QueryDesinger"/> that filtered by conditions. </returns>
         public QueryDesinger AddConditions(params BaseCondition[] conditions)
         {
             return AddConditions(conditions as IEnumerable<BaseCondition>);
         }
-
-
+        
         /// <summary>
-        /// 
+        /// Adds to current <see cref="QueryDesinger"/> additional conditions.
         /// </summary>
-        /// <param name="conditions"></param>
-        /// <returns>Current <see cref="QueryDesinger"> that filtered by conditions. </returns>
+        /// <param name="conditions">additional conditions. </param>
+        /// <returns>Current <see cref="QueryDesinger"/> that filtered by conditions. </returns>
         public QueryDesinger AddConditions(IEnumerable<BaseCondition> conditions)
         {
             if (conditions == null)
@@ -168,20 +170,22 @@ namespace Spolty.Framework.Designers
         #region Orderings methods
 
         /// <summary>
-        /// 
+        /// Adds orderings to <see cref="QueryDesinger"/>. Orderings apply only for current EntityType. 
         /// </summary>
+        /// <remarks>If you want apply orderings to joined types you should use AddJoins method with defined <see cref="OrderingList"/> parameter.</remarks>
         /// <param name="orderings"></param>
-        /// <returns>Current <see cref="QueryDesinger"> that contains orderings.</returns>
+        /// <returns>Current <see cref="QueryDesinger"/> that contains orderings.</returns>
         public QueryDesinger AddOrderings(params Ordering[] orderings)
         {
             return AddOrderings(orderings as IEnumerable<Ordering>);
         }
 
         /// <summary>
-        /// 
+        /// Adds orderings to <see cref="QueryDesinger"/>. Orderings apply only for current EntityType. 
         /// </summary>
+        /// <remarks>If you want apply orderings to joined types you should use AddJoins method with defined <see cref="OrderingList"/> parameter.</remarks>
         /// <param name="orderings"></param>
-        /// <returns>Current <see cref="QueryDesinger"> that contains orderings.</returns>
+        /// <returns>Current <see cref="QueryDesinger"/> that contains orderings.</returns>
         public QueryDesinger AddOrderings(IEnumerable<Ordering> orderings)
         {
             if (orderings == null)
@@ -205,10 +209,11 @@ namespace Spolty.Framework.Designers
         #endregion
 
         /// <summary>
-        /// 
+        /// Produces the set difference of two sequences by using the default equality comparer to compare values. 
+        /// First sequence it's current <see cref="QueryDesinger"/>, second it's passing parameter <see cref="IQueryable"/> . 
         /// </summary>
-        /// <param name="exceptQueryable"></param>
-        /// <returns></returns>
+        /// <param name="exceptQueryable">An <see cref="IQueryable"/> whose elements that also occur in the first sequence will not appear in the returned sequence. </param>
+        /// <returns>The <see cref="QueryDesinger"/> that contains the set difference of the two sequences. </returns>
         public QueryDesinger Except(IQueryable exceptQueryable)
         {
             Checker.CheckArgumentNull(exceptQueryable, "exceptQueryable");
@@ -220,10 +225,11 @@ namespace Spolty.Framework.Designers
         }
 
         /// <summary>
-        /// 
+        /// Produces the set union of two sequences by using the default equality comparer. 
+        /// First sequence is current <see cref="QueryDesinger"/>.
         /// </summary>
-        /// <param name="unionQueryable"></param>
-        /// <returns></returns>
+        /// <param name="unionQueryable">A sequence whose distinct elements form the second set for the union operation. </param>
+        /// <returns>The <see cref="QueryDesinger"/> that contains the elements from both input sequences, excluding duplicates. </returns>
         public QueryDesinger Union(IQueryable unionQueryable)
         {
             Checker.CheckArgumentNull(unionQueryable, "unionQueryable");
@@ -235,12 +241,55 @@ namespace Spolty.Framework.Designers
         }
 
         /// <summary>
-        /// 
+        /// Adds joins to current <see cref="QueryDesinger"/> by using <see cref="JoinNode"/>. 
         /// </summary>
-        /// <param name="rootNode"></param>
-        /// <param name="parameterses"></param>
-        /// <returns></returns>
-        public QueryDesinger AddJoin(JoinNode rootNode, params IParameterMarker[] parameterses)
+        /// <param name="rootNode">root noode should be equal type to current ElementType</param>
+        /// <param name="parameteres">additional parameters <see cref="IParameterMarker"/> use for creation 
+        /// additional condition <see cref="ConditionList"/> and/or ordering <see cref="OrderingList"/>. 
+        /// Orderings in this case could be assigned to joins nodes.</param>
+        /// <returns>The <see cref="QueryDesinger"/> which has joins with other Entity filtered and ordered by passed parameteres.</returns>
+        /// <example>
+        /// // create QueryDesigner with ElementType == Product
+        /// var queryDesinger = new QueryDesinger(context, typeof(Product));
+        ///
+        /// //create root node which elementType has the same type in queryDesigner
+        /// var root = new JoinNode(typeof (Product));
+        ///
+        /// // create child node Category with propertyName "Products". 
+        /// // Because Category linked with Product by next property:
+        /// // public EntitySet<Product> Products 
+        /// var categoryNode = new JoinNode(typeof (Category), "Products");
+        /// 
+        /// // add categoryNode to root node
+        /// root.AddChildren(categoryNode);
+        ///
+        /// // create ordering by Product.ProductName ASC
+        /// var orderByProductName = new Ordering("ProductName");
+        /// // create ordering by Category.CategoryName DESC
+        /// var orderByCategoryName = new Ordering("CategoryName", SortDirection.Descending, typeof (Category));
+        /// 
+        /// // create ordering list with already created orderings
+        /// var orderingList = new OrderingList(orderByProductName, orderByCategoryName);
+        ///
+        /// // create filter by Product.ProductName like "%l%"
+        /// var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+        /// // create filter by Category.Description like "Sweet%"
+        /// var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Category));
+        ///
+        /// // create condition list with already created conditions
+        /// var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+        /// 
+        /// // make join Product table with Category filtered by conditions 
+        /// // and ordered by already created ordering
+        /// queryDesinger.AddJoins(root, conditionList, orderingList);
+        /// 
+        /// // get results 
+        /// foreach (Product product in queryDesinger)
+        /// {
+        ///     Console.WriteLine(product.ProductID + " " + product.ProductName);
+        /// }
+        /// </example>
+        public QueryDesinger AddJoins(JoinNode rootNode, params IParameterMarker[] parameteres)
         {
             Checker.CheckArgumentNull(rootNode, "rootNode");
 
@@ -252,14 +301,14 @@ namespace Spolty.Framework.Designers
             OrderingList orderings;
             ConditionList conditions;
 
-            ParametersParser.Parse(out conditions, out orderings);
+            ParametersParser.Parse(out conditions, out orderings, parameteres);
 
             AddConditions(rootNode.Conditions);
 
             _expression = AddChildren(_expression, rootNode, conditions, orderings);
 
             AddConditions(conditions);
-            AddOrderings(orderings);
+            AddOrderings(orderings.Where(order => order.ElementType == null || order.ElementType == ElementType));
 
             return this;
         }
@@ -270,7 +319,7 @@ namespace Spolty.Framework.Designers
         /// Bypasses a specified number of elements in a sequence and then returns the remaining elements. 
         /// </summary>
         /// <param name="count">The number of elements to skip before returning the remaining elements. </param>
-        /// <returns>Current <see cref="QueryDesinger"> that contains elements that occur after the specified index in the input sequence. </returns>
+        /// <returns>Current <see cref="QueryDesinger"/> that contains elements that occur after the specified index in the input sequence. </returns>
         public QueryDesinger Skip(int count)
         {
             if (count > 0)
@@ -285,7 +334,7 @@ namespace Spolty.Framework.Designers
         /// Returns a specified number of contiguous elements from the start of a sequence.
         /// </summary>
         /// <param name="count">The number of elements to return. </param>
-        /// <returns>Current <see cref="QueryDesinger"> that contains the specified number of elements from the start of source. </returns>
+        /// <returns>Current <see cref="QueryDesinger"/> that contains the specified number of elements from the start of source. </returns>
         public QueryDesinger Take(int count)
         {
             if (count > 0)
@@ -365,5 +414,10 @@ namespace Spolty.Framework.Designers
         }
 
         #endregion
-   }
+
+        public object Clone()
+        {
+            return new QueryDesinger(_context, this);
+        }
+    }
 }

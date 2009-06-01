@@ -62,6 +62,8 @@ namespace Spolty.Framework.Parsers
                         throw new NotSupportedException("parameter");
                     }
                 }
+                conditions.RemoveDuplicates();
+                orderings.RemoveDuplicates();
             }
         }
 		

@@ -5,6 +5,7 @@ using System.Data.Linq.Mapping;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
 using Spolty.Framework.Helpers;
@@ -382,6 +383,10 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         public Expression Make(Expression outerExpression, Expression innerExpression,
                                JoinNode childNode, ConditionList conditions)
         {
+            Checker.CheckArgumentNull(outerExpression, "outerExpression");
+            Checker.CheckArgumentNull(innerExpression, "innerExpression");
+            Checker.CheckArgumentNull(childNode, "childNode");
+            
             Type unitingType = GetTemplateType(innerExpression);
             Type resultType = GetTemplateType(outerExpression);
             switch (childNode.JoinParentType)

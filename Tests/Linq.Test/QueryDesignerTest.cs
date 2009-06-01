@@ -352,7 +352,8 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var categoryNode = new JoinNode(typeof (Category), "Products");
             root.AddChildren(categoryNode);
 
-            var queryDesinger = new QueryDesinger(context, root);
+            var queryDesinger = new QueryDesinger(context, typeof(Product));
+            queryDesinger.AddJoins(root, new OrderingList(new Ordering("ProductName", typeof(Product)), new Ordering("CategoryName", typeof (Category))));
             queryDesinger.Skip(10).Take(10);
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
@@ -379,7 +380,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
         /// WHERE ([t2].[Discount] > @p0) AND (([t0].[ProductName] LIKE @p1) OR ([t1].[CategoryName] = @p2))',N'@p0 real,@p1 nvarchar(10),@p2 nvarchar(10)',@p0=0,15,@p1=N'Louisiana%',@p2=N'Condiments'* 
         /// </summary>
         [Test]
-        public void TestJoinWithTwoChildrenAndComplicatedFilter()
+        public void TestJoinWithTwoChildrenAndComplicatedFilterAndDistincted()
         {
             const string productName = "Louisiana";
             const string categoryName = "Condiments";
@@ -497,6 +498,8 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // assign conditions
             queryDesinger.AddConditions(conditionals);
 
+            // make Distinct
+            queryDesinger.Distinct();
 
             // make orderings by ProductName and CategoryName
             var productNameOrder = new Ordering("ProductName", SortDirection.Ascending, typeof (Product));
@@ -504,8 +507,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             queryDesinger.AddOrderings(new OrderingList(productNameOrder, categoryNameOrder));
 
-            // make Distinct
-            IQueryable<Product> distictedProducts = queryDesinger.Distinct().Cast<Product>();
+            IQueryable<Product> distictedProducts = queryDesinger.Cast<Product>();
 
             var list = new List<Product>(distictedProducts);
             Assert.AreEqual(resultRowCount, list.Count);
@@ -621,6 +623,88 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
                               (Products.CategoryID IN (4, 5, 6)) ";
 
             CheckDataWithExecuteReaderResult(query, resultRowCount, list);
+        }
+
+        [Test]
+        public void TestUnion()
+        {
+            const int resultRowCount = 5;
+            // create QueryDesigner with ElementType == Product
+            var queryDesinger = new QueryDesinger(context, typeof(Product));
+
+            //create root node which elementType has the same type in queryDesigner
+            var root = new JoinNode(typeof(Product));
+
+            // create child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof(Category), "Products");
+
+            // add categoryNode to root node
+            root.AddChildren(categoryNode);
+
+            // create filter by Product.ProductName like "%l%"
+            var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            // create filter by Category.Description like "Sweet%"
+            var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Category));
+
+            // create condition list with already created conditions
+            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+
+            // make join Product table with Category filtered by conditions 
+            // and ordered by already created ordering
+            queryDesinger.AddJoins(root, conditionList);
+
+            QueryDesinger cloneQueryDesigner = (QueryDesinger) queryDesinger.Clone();
+
+            queryDesinger.Skip(0).Take(3);
+            cloneQueryDesigner.Skip(2).Take(4);
+
+            queryDesinger.Union(cloneQueryDesigner);
+
+            var list = new List<Product>(queryDesinger.Cast<Product>());
+            Assert.AreEqual(resultRowCount, list.Count);
+        }
+
+        [Test]
+        public void TestExcept()
+        {
+            const int resultRowCount = 2;
+            // create QueryDesigner with ElementType == Product
+            var queryDesinger = new QueryDesinger(context, typeof(Product));
+
+            //create root node which elementType has the same type in queryDesigner
+            var root = new JoinNode(typeof(Product));
+
+            // create child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof(Category), "Products");
+
+            // add categoryNode to root node
+            root.AddChildren(categoryNode);
+
+            // create filter by Product.ProductName like "%l%"
+            var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            // create filter by Category.Description like "Sweet%"
+            var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Category));
+
+            // create condition list with already created conditions
+            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+
+            // make join Product table with Category filtered by conditions 
+            // and ordered by already created ordering
+            queryDesinger.AddJoins(root, conditionList);
+
+            QueryDesinger cloneQueryDesigner = (QueryDesinger)queryDesinger.Clone();
+
+            queryDesinger.Skip(0).Take(3);
+            cloneQueryDesigner.Skip(2).Take(4);
+
+            queryDesinger.Except(cloneQueryDesigner);
+
+            var list = new List<Product>(queryDesinger.Cast<Product>());
+            Assert.AreEqual(resultRowCount, list.Count);
         }
     }
 }

@@ -11,7 +11,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 {
     internal class OrderingExpressionMaker : ExpressionMaker, IOrderingExpressionMaker
     {
-        public OrderingExpressionMaker(IExpressionMakerFactory factory) : base(factory)
+        public OrderingExpressionMaker(IExpressionMakerFactory factory)
+            : base(factory)
         {
         }
 
@@ -27,9 +28,9 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             {
                 for (int i = 0; i < orderingList.Count; i++)
                 {
-                    Ordering ordering = orderingList[i];
-                    string[] properties = ordering.ColumnName.Split('.');
                     Type sourceType = GetTemplateType(source);
+                    Ordering ordering = orderingList[i];
+                    string propertyName = ordering.ColumnName;
                     Type elementType = ordering.ElementType ?? sourceType;
 
                     PropertyInfo property;
@@ -38,18 +39,23 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     if (elementType != sourceType)
                     {
                         var relationProperty = sourceType.GetProperty(elementType.Name);
+                        
+                        if (relationProperty == null)
+                        {
+                            continue;
+                        }
+
                         propertyExpression = Expression.Property(sourceParameter, relationProperty);
                         property = elementType.GetProperty(ordering.ColumnName);
-//                        propertyExpression = Expression.Property(relationPropertyExpression, property);
                     }
                     else
                     {
-                        property = elementType.GetProperty(properties[0]);
+                        property = elementType.GetProperty(propertyName);
                     }
 
                     if (property != null &&
                         (!property.PropertyType.IsGenericType ||
-                         property.PropertyType.GetGenericTypeDefinition() == typeof (Nullable<>)))
+                         property.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>)))
                     {
 
                         LambdaExpression orderingExpression = GetLambdaExpression(elementType,
@@ -60,8 +66,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                         typeArguments[1] = orderingExpression.Body.Type;
 
                         source = ordering.SortDirection == SortDirection.Ascending
-                                     ? CallQueryableMethod("OrderBy", typeArguments, source, orderingExpression)
-                                     : CallQueryableMethod("OrderByDescending", typeArguments, source,
+                                     ? CallQueryableMethod(MethodName.OrderBy, typeArguments, source, orderingExpression)
+                                     : CallQueryableMethod(MethodName.OrderByDescending, typeArguments, source,
                                                            orderingExpression);
                     }
                 }

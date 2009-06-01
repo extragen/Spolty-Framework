@@ -23,8 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Debug\Spolty.Framework.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -75,6 +74,7 @@
     <Compile Include="ExpressionMakers\IExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\IncludingExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\JoinExpressionMaker.cs" />
+    <Compile Include="ExpressionMakers\Linq\MethodName.cs" />
     <Compile Include="ExpressionMakers\Linq\OrderingExpressionMaker.cs" />
     <Compile Include="Parameters\Aggregations\ComplicatedAggregateMethod.cs" />
     <Compile Include="Parameters\Aggregations\Enums\AggregateMethodType.cs" />
