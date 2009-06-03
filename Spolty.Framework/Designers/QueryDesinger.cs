@@ -31,6 +31,15 @@ namespace Spolty.Framework.Designers
 
         #endregion
 
+        #region ICloneable Members
+
+        public object Clone()
+        {
+            return new QueryDesinger(_context, this);
+        }
+
+        #endregion
+
         #region IQueryable Members
 
         public IEnumerator GetEnumerator()
@@ -139,7 +148,7 @@ namespace Spolty.Framework.Designers
         {
             return AddConditions(conditions as IEnumerable<BaseCondition>);
         }
-        
+
         /// <summary>
         /// Adds to current <see cref="QueryDesinger"/> additional conditions.
         /// </summary>
@@ -218,8 +227,8 @@ namespace Spolty.Framework.Designers
         {
             Checker.CheckArgumentNull(exceptQueryable, "exceptQueryable");
 
-            _expression = _expressionMakerFactory.CreateExceptExpressionMaker().Make(_expression,
-                                                                                    exceptQueryable.Expression);
+            _expression = _expressionMakerFactory.CreateExpressionMaker().MakeExcept(_expression,
+                                                                                     exceptQueryable.Expression);
 
             return this;
         }
@@ -234,8 +243,8 @@ namespace Spolty.Framework.Designers
         {
             Checker.CheckArgumentNull(unionQueryable, "unionQueryable");
 
-            _expression = _expressionMakerFactory.CreateUnionExpressionMaker().Make(_expression,
-                                                                                   unionQueryable.Expression);
+            _expression = _expressionMakerFactory.CreateExpressionMaker().MakeUnion(_expression,
+                                                                                    unionQueryable.Expression);
 
             return this;
         }
@@ -324,7 +333,7 @@ namespace Spolty.Framework.Designers
         {
             if (count > 0)
             {
-                _expression = _expressionMakerFactory.CreateSkipExpressionMaker().Make(count, _expression);
+                _expression = _expressionMakerFactory.CreateExpressionMaker().MakeSkip(count, _expression);
             }
 
             return this;
@@ -339,7 +348,7 @@ namespace Spolty.Framework.Designers
         {
             if (count > 0)
             {
-                _expression = _expressionMakerFactory.CreateTakeExpressionMaker().Make(count, _expression);
+                _expression = _expressionMakerFactory.CreateExpressionMaker().MakeTake(count, _expression);
             }
 
             return this;
@@ -351,11 +360,59 @@ namespace Spolty.Framework.Designers
         /// <returns>Returns distinct elements from a sequence by using the default equality comparer to compare values.</returns>
         public QueryDesinger Distinct()
         {
-            _expression = _expressionMakerFactory.CreateDistinctExpressionMaker().Make(_expression);
+            _expression = _expressionMakerFactory.CreateExpressionMaker().MakeDistinct(_expression);
 
             return this;
         }
 
+        public int Count()
+        {
+            var copy = (QueryDesinger) Clone();
+
+            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeCount(copy._expression);
+
+            return (int) copy.Provider.Execute(copy._expression);
+        }
+
+        /// <summary>
+        /// Determines whether a sequence contains any elements.
+        /// </summary>
+        /// <returns>true if the source sequence contains any elements; otherwise, false. </returns>
+        public bool Any()
+        {
+            var copy = (QueryDesinger) Clone();
+
+            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeAny(copy._expression);
+
+            return (bool) copy.Provider.Execute(copy._expression);
+        }
+
+        /// <summary>
+        /// Returns the first element of a sequence. 
+        /// </summary>
+        /// <returns>The first element in current <see cref="QueryDesinger"/>. </returns>
+        public object First()
+        {
+            var copy = (QueryDesinger) Clone();
+
+            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeFirst(copy._expression);
+
+            return copy.Provider.Execute(copy._expression);
+        }
+
+        /// <summary>
+        /// Returns the first element of a sequence, or a default value if the sequence contains no elements. 
+        /// </summary>
+        /// <returns>default(ElementType) if source is empty; otherwise, the first element in source. </returns>
+        public object FirstOrDefault()
+        {
+            var copy = (QueryDesinger) Clone();
+
+            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeFirstOrDefault(copy._expression);
+
+            return copy.Provider.Execute(copy._expression);
+        }
+ 
         #endregion
 
         #region Private methods
@@ -414,10 +471,5 @@ namespace Spolty.Framework.Designers
         }
 
         #endregion
-
-        public object Clone()
-        {
-            return new QueryDesinger(_context, this);
-        }
     }
 }

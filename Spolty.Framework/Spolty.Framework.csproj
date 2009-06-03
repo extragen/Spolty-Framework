@@ -65,7 +65,6 @@
     <Compile Include="Exceptions\SArgumentNullException.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\PredicateConstants.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\PredicateMaker.cs" />
-    <Compile Include="ExpressionMakers\Linq\AggregateExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ConditionExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Factories\EntityFrameworkExpressionMakerFactory.cs" />
@@ -76,10 +75,6 @@
     <Compile Include="ExpressionMakers\Linq\JoinExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\MethodName.cs" />
     <Compile Include="ExpressionMakers\Linq\OrderingExpressionMaker.cs" />
-    <Compile Include="Parameters\Aggregations\ComplicatedAggregateMethod.cs" />
-    <Compile Include="Parameters\Aggregations\Enums\AggregateMethodType.cs" />
-    <Compile Include="Parameters\Aggregations\AggregateMethod.cs" />
-    <Compile Include="Parameters\Conditionals\AggregateCondition.cs" />
     <Compile Include="Parameters\Conditionals\AndCondition.cs" />
     <Compile Include="Parameters\Conditionals\BaseCondition.cs" />
     <Compile Include="Parameters\Conditionals\BiCondition.cs" />

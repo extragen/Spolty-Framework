@@ -10,16 +10,20 @@ namespace Spolty.Framework.ExpressionMakers
     public interface IExpressionMaker
     {
         IExpressionMakerFactory Factory { get; }
+        Expression MakeDistinct(Expression source);
+        Expression MakeCount(Expression source);
+        Expression MakeAny(Expression source);
+        Expression MakeFirst(Expression source);
+        Expression MakeFirstOrDefault(Expression source);
+        Expression MakeUnion(Expression source, Expression union);
+        Expression MakeExcept(Expression source, Expression except);
+        Expression MakeTake(int count, Expression source);
+        Expression MakeSkip(int count, Expression source);
     }
 
     public interface IConditionExpressionMaker : IExpressionMaker
     {
         Expression Make(IEnumerable<BaseCondition> conditions, Expression sourceExpression);
-
-        Expression MakeAggregate(Expression sourceExpression,
-                                 ParameterExpression parameter,
-                                 ConditionList conditionals,
-                                 bool singleItem);
     }
 
     public interface IOrderingExpressionMaker : IExpressionMaker
@@ -31,30 +35,5 @@ namespace Spolty.Framework.ExpressionMakers
     {
         Expression Make(Expression outerExpression, Expression innerExpression, JoinNode childNode,
                         ConditionList parameter);
-    }
-
-    public interface ISkipExpressionMaker : IExpressionMaker
-    {
-        Expression Make(int count, Expression source);
-    }
-
-    public interface ITakeExpressionMaker : IExpressionMaker
-    {
-        Expression Make(int count, Expression source);
-    }
-
-    public interface IExceptExpressionMaker : IExpressionMaker
-    {
-        Expression Make(Expression source, Expression except);
-    }
-
-    public interface IUnionExpressionMaker : IExpressionMaker
-    {
-        Expression Make(Expression source, Expression union);
-    }    
-    
-    public interface IDistinctExpressionMaker : IExpressionMaker
-    {
-        Expression Make(Expression source);
     }
 }

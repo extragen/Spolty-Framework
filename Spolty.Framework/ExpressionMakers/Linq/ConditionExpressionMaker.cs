@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
-using Spolty.Framework.Parameters.Aggregations;
-using Spolty.Framework.Parameters.Aggregations.Enums;
+//using Spolty.Framework.Parameters.Aggregations;
+//using Spolty.Framework.Parameters.Aggregations.Enums;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
 
@@ -41,66 +41,6 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 sourceExpression = MakeWhere(sourceType, sourceExpression, body, p);
             }
 
-            return sourceExpression;
-        }
-
-        public Expression MakeAggregate(
-            Expression sourceExpression,
-            ParameterExpression parameter,
-            ConditionList conditionals,
-            bool singleItem)
-        {
-            if (conditionals == null)
-            {
-                throw new ArgumentNullException("conditionals");
-            }
-
-            Type sourceType = GetTemplateType(sourceExpression);
-            foreach (AggregateCondition aggregateCondition in conditionals)
-            {
-                Type elementType = aggregateCondition.ElementType;
-                if (sourceType.GetMember(elementType.Name).Length == 0)
-                {
-                    throw new SpoltyException("There are no members");
-                }
-
-                AggregateMethod aggregateMethod;
-                Type valueType;
-                if (String.IsNullOrEmpty(aggregateCondition.FieldName) &&
-                    (aggregateCondition.AggregateMethodType == AggregateMethodType.Count ||
-                     aggregateCondition.AggregateMethodType == AggregateMethodType.LongCount))
-                {
-                    aggregateMethod = new AggregateMethod(aggregateCondition.AggregateMethodType);
-                    valueType = typeof (int);
-                }
-                else
-                {
-                    PropertyInfo propertyInfo = elementType.GetProperty(aggregateCondition.FieldName);
-                    if (propertyInfo == null)
-                    {
-                        throw new SpoltyException("propertyInfo is not found");
-                    }
-                    aggregateMethod = new ComplicatedAggregateMethod(aggregateCondition.AggregateMethodType, propertyInfo);
-                    valueType = propertyInfo.PropertyType;
-                }
-
-                Expression aggregateExpression = null;
-//                    AggregateExpressionMaker.MakeAggregateMethodExpression(sourceExpression, elementType, aggregateMethod, parameter);
-
-                if (aggregateExpression == null)
-                {
-                    return null;
-                }
-
-                Expression constantExpression =
-                    Expression.Constant(Convert.ChangeType(aggregateCondition.Value, valueType), valueType);
-
-                Expression body =
-                    MakeComarisonExpression(aggregateExpression, constantExpression, aggregateCondition.Operator);
-
-
-                sourceExpression = MakeWhere(sourceType, sourceExpression, body, parameter);
-            }
             return sourceExpression;
         }
 

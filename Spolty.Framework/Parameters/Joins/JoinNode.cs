@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
-using Spolty.Framework.Parameters.Aggregations;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Joins.Enums;
 
@@ -12,7 +11,6 @@ namespace Spolty.Framework.Parameters.Joins
 {
     public class JoinNode : BaseNode.BaseNode
     {
-        internal readonly List<AggregateMethod> _conditionAggregateMethod;
         private readonly ConditionList _conditions = new ConditionList();
         private readonly List<string> _currentFieldsNames;
         private readonly bool _isTypeNameEqualPropertyName;
@@ -128,7 +126,6 @@ namespace Spolty.Framework.Parameters.Joins
             _propertyName = propertyName;
             _isTypeNameEqualPropertyName = _propertyName == entityType.Name;
             _childNodes = new JoinNodeList(this);
-            _conditionAggregateMethod = new List<AggregateMethod>();
             _parentFieldsNames = new List<string>(0);
             _currentFieldsNames = new List<string>(0);
         }
@@ -195,17 +192,7 @@ namespace Spolty.Framework.Parameters.Joins
         {
             get { return _isTypeNameEqualPropertyName; }
         }
-
-        internal ReadOnlyCollection<AggregateMethod> ConditionAggregateMethod
-        {
-            get { return _conditionAggregateMethod.AsReadOnly(); }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public AggregateMethod SelectorAggregateMethod { get; set; }
-
+ 
         /// <summary>
         /// 
         /// </summary>
@@ -228,20 +215,6 @@ namespace Spolty.Framework.Parameters.Joins
         public ConditionList Conditions
         {
             get { return _conditions; }
-        }
-
-        internal void SetAggregateMethod(Type entityType, AggregateMethod aggregateMethod)
-        {
-            var node = (JoinNode) FindInChildren(entityType, true);
-            if (node == null)
-            {
-                throw new SpoltyException("Node is not found");
-            }
-
-            if (node._conditionAggregateMethod.IndexOf(aggregateMethod) < 0)
-            {
-                node._conditionAggregateMethod.Add(aggregateMethod);
-            }
         }
 
         /// <summary>
@@ -294,7 +267,6 @@ namespace Spolty.Framework.Parameters.Joins
         {
             int result = base.GetHashCode();
             result ^= _joinParentType.GetHashCode();
-            result ^= _conditionAggregateMethod.GetHashCode();
             return result;
         }
 

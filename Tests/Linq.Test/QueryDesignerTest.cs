@@ -353,7 +353,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, typeof(Product));
-            queryDesinger.AddJoins(root, new OrderingList(new Ordering("ProductName", typeof(Product)), new Ordering("CategoryName", typeof (Category))));
+            queryDesinger.AddJoins(root, new OrderingList(new Ordering("ProductName", typeof(Product)), new Ordering("CategoryName", SortDirection.Descending, typeof (Category))));
             queryDesinger.Skip(10).Take(10);
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
@@ -706,5 +706,112 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
         }
+        
+        [Test]
+        public void TestFirst()
+        {
+            // create QueryDesigner with ElementType == Product
+            var queryDesinger = new QueryDesinger(context, typeof(Product));
+
+            //create root node which elementType has the same type in queryDesigner
+            var root = new JoinNode(typeof(Product));
+
+            // create child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof(Category), "Products");
+
+            // add categoryNode to root node
+            root.AddChildren(categoryNode);
+
+            // create filter by Product.ProductName like "%l%"
+            var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            // create filter by Category.Description like "Sweet%"
+            var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Category));
+
+            // create condition list with already created conditions
+            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+
+            // make join Product table with Category filtered by conditions 
+            // and ordered by already created ordering
+            queryDesinger.AddJoins(root, conditionList);
+
+            object first = queryDesinger.First();
+
+            Assert.IsInstanceOfType(typeof(Product), first);
+        }
+
+        [Test]
+        public void TestFirstOrDefault()
+        {
+            // create QueryDesigner with ElementType == Product
+            var queryDesinger = new QueryDesinger(context, typeof(Product));
+
+            //create root node which elementType has the same type in queryDesigner
+            var root = new JoinNode(typeof(Product));
+
+            // create child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            var categoryNode = new JoinNode(typeof(Category), "Products");
+
+            // add categoryNode to root node
+            root.AddChildren(categoryNode);
+
+            // create filter by Product.ProductName like "%l%"
+            var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            // create filter by Category.Description like "Sweet%"
+            var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Category));
+
+            // create condition list with already created conditions
+            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+
+            // make join Product table with Category filtered by conditions 
+            // and ordered by already created ordering
+            queryDesinger.AddJoins(root, conditionList);
+
+            object first = queryDesinger.FirstOrDefault();
+
+            Assert.IsInstanceOfType(typeof(Product), first);
+        }
+
+        [Test]
+        public void TestCount()
+        {
+            const int resultRowCount = 77;
+            //create root node
+            var root = new JoinNode(typeof(Product));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            root.AddChildren(new JoinNode(typeof(Category), "Products"));
+
+            var queryDesinger = new QueryDesinger(context, root);
+            var count = queryDesinger.Count();
+
+            // check numbers of entity
+            Assert.AreEqual(resultRowCount, count);
+        }
+
+        [Test]
+        public void TestAny()
+        {
+            const bool result = true;
+            //create root node
+            var root = new JoinNode(typeof(Product));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            root.AddChildren(new JoinNode(typeof(Category), "Products"));
+
+            var queryDesinger = new QueryDesinger(context, root);
+            var any = queryDesinger.Any();
+
+            // check numbers of entity
+            Assert.AreEqual(result, any);
+        }
+
     }
 }

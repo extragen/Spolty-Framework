@@ -8,7 +8,6 @@ namespace Spolty.Framework.Parameters.Conditionals
     [XmlInclude(typeof (Condition))]
     [XmlInclude(typeof (OrCondition))]
     [XmlInclude(typeof (AndCondition))]
-    [XmlInclude(typeof (AggregateCondition))]
     [XmlInclude(typeof (BoolCondition))]
     [XmlInclude(typeof (FieldCondition))]
     public abstract class BaseCondition : IEquatable<BaseCondition>, ICloneable

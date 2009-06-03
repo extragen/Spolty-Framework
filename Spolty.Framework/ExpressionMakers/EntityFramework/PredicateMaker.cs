@@ -10,7 +10,7 @@ using Spolty.Framework.Parameters.Conditionals.Enums;
 
 namespace Spolty.Framework.ExpressionMakers.EntityFramework
 {
-    public class PredicateMaker : IConditionExpressionMaker
+    public class PredicateMaker// : IConditionExpressionMaker
     {
         private const string DefaultTableName = "it";
         private readonly List<ObjectParameter> _objectParameters;

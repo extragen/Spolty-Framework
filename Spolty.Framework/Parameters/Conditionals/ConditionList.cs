@@ -108,24 +108,6 @@ namespace Spolty.Framework.Parameters.Conditionals
             return lw;
         }
 
-        internal ConditionList AggregateConditions(Type elementType)
-        {
-            ConditionList lw = new ConditionList();
-            foreach (BaseCondition condition in this)
-            {
-                if (condition is AggregateCondition)
-                {
-                    AggregateCondition aggregateCondition = (AggregateCondition) condition;
-                    if (aggregateCondition.ElementType != null &&
-                        aggregateCondition.ElementType == elementType)
-                    {
-                        lw.Add(condition);
-                    }
-                }
-            }
-            return lw;
-        }
-
         /// <summary>
         /// Adds <see cref="Condition"/>s with the same <see cref="fieldName"/> and differents <see cref="values"/>.
         /// <see cref="fieldName"/> and <see cref="values"/> compare by <see cref="ConditionOperator.EqualTo"/>.

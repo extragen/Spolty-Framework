@@ -12,14 +12,15 @@ using Spolty.Framework.Storages;
 
 namespace Spolty.Framework.ExpressionMakers.Linq
 {
-    internal class ExpressionMaker : IExpressionMaker, ISkipExpressionMaker, ITakeExpressionMaker, IUnionExpressionMaker,
-                                     IExceptExpressionMaker, IDistinctExpressionMaker
+    internal class ExpressionMaker : IExpressionMaker
     {
         private const string ParameterDictionaryKey = "ParameterDictionary";
+
         protected static Type EnumerableType;
         protected static Type IEnumerableType;
         protected static Type QueryableType;
         private readonly IExpressionMakerFactory _factory;
+        protected static Type GenericIEnumerableType; 
 
         #region Constructors
 
@@ -28,6 +29,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             QueryableType = typeof (Queryable);
             EnumerableType = typeof (Enumerable);
             IEnumerableType = typeof (IEnumerable);
+            GenericIEnumerableType = typeof (IEnumerable<>);
         }
 
         public ExpressionMaker(IExpressionMakerFactory factory)
@@ -44,11 +46,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             get { return _factory; }
         }
 
-        #endregion
-
-        #region IExceptExpressionMaker Members
-
-        Expression IExceptExpressionMaker.Make(Expression source, Expression except)
+        Expression IExpressionMaker.MakeExcept(Expression source, Expression except)
         {
             Checker.CheckArgumentNull(source, "source");
             Checker.CheckArgumentNull(except, "except");
@@ -61,40 +59,26 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException("Type of source mismatch type of except");
             }
 
-            return CallQueryableMethod("Except", new[] { sourceType }, source, except);
+            return CallQueryableMethod(MethodName.Except, new[] { sourceType }, source, except);
         }
 
-        #endregion
+        Expression IExpressionMaker.MakeSkip(int count, Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
 
-        #region ISkipExpressionMaker Members
+            return CallQueryableMethod(MethodName.Skip, new[] { GetTemplateType(source) }, source, Expression.Constant(count));
+        }
 
-        Expression ISkipExpressionMaker.Make(int count, Expression source)
+        Expression IExpressionMaker.MakeTake(int count, Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
             //TODO: for sequence
-            return CallQueryableMethod("Skip", new[] { GetTemplateType(source) }, source, Expression.Constant(count));
-            //return QueryExpression.Skip(source, Expression.Constant(count));
-        }
-
-        #endregion
-
-        #region ITakeExpressionMaker Members
-
-        Expression ITakeExpressionMaker.Make(int count, Expression source)
-        {
-            Checker.CheckArgumentNull(source, "source");
-
-            //TODO: for sequence
-            return CallQueryableMethod("Take", new[] { GetTemplateType(source)}, source, Expression.Constant(count));
+            return CallQueryableMethod(MethodName.Take, new[] { GetTemplateType(source)}, source, Expression.Constant(count));
             //return QueryExpression.Take(source, Expression.Constant(count));
         }
 
-        #endregion
-
-        #region IUnionExpressionMaker Members
-
-        Expression IUnionExpressionMaker.Make(Expression source, Expression union)
+        Expression IExpressionMaker.MakeUnion(Expression source, Expression union)
         {
             Checker.CheckArgumentNull(source, "source");
             Checker.CheckArgumentNull(union, "union");
@@ -107,19 +91,43 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException("Type of source mismatch type of union");
             }
 
-            return CallQueryableMethod("Union", new[] { sourceType }, source, union);
+            return CallQueryableMethod(MethodName.Union, new[] { sourceType }, source, union);
             //return QueryExpression.Except(source, except);
         }
 
-        #endregion
-
-        #region Implementation of IDistinctExpressionMaker
-
-        Expression IDistinctExpressionMaker.Make(Expression source)
+        Expression IExpressionMaker.MakeDistinct(Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
-            return CallQueryableMethod("Distinct", new[] { GetTemplateType(source) }, source);
+            return CallQueryableMethod(MethodName.Distinct, new[] { GetTemplateType(source) }, source);
+        }
+
+        Expression IExpressionMaker.MakeAny(Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
+
+            return CallQueryableMethod(MethodName.Any, new[] {GetTemplateType(source)}, source);
+        }
+
+        Expression IExpressionMaker.MakeCount(Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
+           
+            return CallQueryableMethod(MethodName.Count, new[] { GetTemplateType(source) }, source);
+        }
+
+        Expression IExpressionMaker.MakeFirst(Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
+
+            return CallQueryableMethod(MethodName.First, new[] { GetTemplateType(source) }, source);
+        }
+
+        Expression IExpressionMaker.MakeFirstOrDefault(Expression source)
+        {
+            Checker.CheckArgumentNull(source, "source");
+
+            return CallQueryableMethod(MethodName.FirstOrDefault, new[] { GetTemplateType(source) }, source);
         }
 
         #endregion
