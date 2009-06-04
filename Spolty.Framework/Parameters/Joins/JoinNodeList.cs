@@ -14,9 +14,9 @@ namespace Spolty.Framework.Parameters.Joins
         {
             var joinChildNode = (JoinNode) childNode;
             var parentNode = (JoinNode) ParentNode;
-            if (parentNode.JoinParentType == JoinType.LeftJoin)
+            if (parentNode.JoinWithParentBy == JoinType.LeftOuterJoin)
             {
-                joinChildNode.JoinParentType = JoinType.LeftJoin;
+                joinChildNode.JoinWithParentBy = JoinType.LeftOuterJoin;
             }
             base.Add(joinChildNode);
         }

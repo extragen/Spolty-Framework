@@ -18,12 +18,18 @@ namespace Spolty.Framework.Parameters.Conditionals
             _rightCondition = rightCondition;
         }
 
+        /// <summary>
+        /// Gets left <see cref="BaseCondition"/>
+        /// </summary>
         public BaseCondition LeftCondition
         {
             get { return _leftCondition; }
             set { _leftCondition = value; }
         }
 
+        /// <summary>
+        /// Gets right <see cref="BaseCondition"/>
+        /// </summary>
         public BaseCondition RightCondition
         {
             get { return _rightCondition; }

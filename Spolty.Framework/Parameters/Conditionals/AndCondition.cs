@@ -6,28 +6,35 @@ using Spolty.Framework.Exceptions;
 namespace Spolty.Framework.Parameters.Conditionals
 {
     /// <summary>
-    /// Class define condition
+    /// Class define AndCondition. 
     /// </summary>
     [Serializable]
     [XmlRoot("andCondition")]
     public class AndCondition : BiCondition
     {
-        #region Fields
-
-        #endregion
-
         #region Constructors
 
+        /// <summary>
+        /// Creates condition. Used only for serialization.
+        /// </summary>
         public AndCondition()
         {
         }
 
-
+        /// <summary>
+        /// Creates <see cref="AndCondition"/> between left and right <see cref="BaseCondition"/>.
+        /// </summary>
+        /// <param name="leftCondition">left condition.</param>
+        /// <param name="rightCondition">right condition.</param>
         public AndCondition(BaseCondition leftCondition, BaseCondition rightCondition)
             : base(leftCondition, rightCondition)
         {
         }
 
+        /// <summary>
+        /// Creates <see cref="AndCondition"/> by <see cref="IList{T}"/> of conditions.
+        /// </summary>
+        /// <param name="conditions"></param>
         public AndCondition(IList<BaseCondition> conditions) : this()
         {
             if (conditions == null || conditions.Count == 0)
@@ -43,7 +50,8 @@ namespace Spolty.Framework.Parameters.Conditionals
             {
                 return;
             }
-            else if (conditions.Count >= 2)
+            
+            if (conditions.Count >= 2)
             {
                 rightCondition = conditions[1];
             }
@@ -55,10 +63,6 @@ namespace Spolty.Framework.Parameters.Conditionals
 
             RightCondition = rightCondition;
         }
-
-        #endregion
-
-        #region Properties
 
         #endregion
 

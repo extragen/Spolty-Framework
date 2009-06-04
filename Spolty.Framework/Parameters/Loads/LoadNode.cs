@@ -8,7 +8,7 @@ namespace Spolty.Framework.Parameters.Loads
 {
     internal class LoadNode : BaseNode.BaseNode
     {
-        public const JoinType JoinParentType = JoinType.LeftJoin;
+        public const JoinType JoinParentType = JoinType.LeftOuterJoin;
         private readonly string _propertyName;
         private bool _including = true;
 

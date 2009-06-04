@@ -571,7 +571,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // because Order_Detail linked with Product by next property:
             // public Product Product - name of property is equal name of type 
             var orderDetailNode = new JoinNode(typeof (Order_Detail));
-            var categoryNode = new JoinNode(typeof (Category), JoinType.LeftJoin);
+            var categoryNode = new JoinNode(typeof (Category), JoinType.LeftOuterJoin);
             var supplierNode = new JoinNode(typeof (Supplier));
             root.AddChildren(orderDetailNode, categoryNode, supplierNode);
 

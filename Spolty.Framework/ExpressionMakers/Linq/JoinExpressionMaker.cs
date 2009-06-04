@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
@@ -35,14 +35,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             LambdaExpression outerKeySelector;
             LambdaExpression innerKeySelector;
 
-            if (childNode.IsTypeNameEqualPropertyName)
+            if (childNode.IsTypeNameEqualAssociatedPropertyName)
             {
                 GetOuterAndInnerKeySelectors(outerType, innerType, out outerKeySelector,
                                              out innerKeySelector);
             }
             else
             {
-                GetOuterAndInnerKeySelectors(outerType, innerType, childNode.PropertyName, out outerKeySelector,
+                GetOuterAndInnerKeySelectors(outerType, innerType, childNode.AssociatedPropertyName, out outerKeySelector,
                                              out innerKeySelector);
             }
             Type innerParam1Type = GenericIEnumerableType.MakeGenericType(new[] {innerType});
@@ -269,14 +269,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             LambdaExpression outerKeySelector;
             LambdaExpression innerKeySelector;
 
-            if (childNode.IsTypeNameEqualPropertyName)
+            if (childNode.IsTypeNameEqualAssociatedPropertyName)
             {
                 GetOuterAndInnerKeySelectors(outerType, innerType, out outerKeySelector,
                                              out innerKeySelector);
             }
             else
             {
-                GetOuterAndInnerKeySelectors(outerType, innerType, childNode.PropertyName, out outerKeySelector,
+                GetOuterAndInnerKeySelectors(outerType, innerType, childNode.AssociatedPropertyName, out outerKeySelector,
                                              out innerKeySelector);
             }
 
@@ -331,8 +331,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             for (int index = 1; index < fieldsCount; index++)
             {
                 var fieldCondition =
-                    new FieldCondition(leftFieldsNames[index], rightFieldsNames[index],
-                                       ConditionOperator.EqualTo, outerType, innerType);
+                    new FieldCondition(leftFieldsNames[index],
+                                       ConditionOperator.EqualTo, rightFieldsNames[index], outerType, innerType);
                 clw.Add(fieldCondition);
             }
 
@@ -397,7 +397,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             
             Type unitingType = GetTemplateType(innerExpression);
             Type resultType = GetTemplateType(outerExpression);
-            switch (childNode.JoinParentType)
+            switch (childNode.JoinWithParentBy)
             {
                 case JoinType.InnerJoin:
 
@@ -419,7 +419,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                                                         childNode, resultType);
                     }
                     break;
-                case JoinType.LeftJoin:
+                case JoinType.LeftOuterJoin:
                     outerExpression = MakeLeftJoin(outerExpression, innerExpression,
                                                    unitingType, resultType,
                                                    childNode);

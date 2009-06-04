@@ -3,18 +3,34 @@ using System.Xml.Serialization;
 
 namespace Spolty.Framework.Parameters.Conditionals
 {
+    /// <summary>
+    /// Creates <see cref="BoolCondition"/>. 
+    /// </summary>
     [Serializable]
     [XmlRoot("boolCondition")]
     public class BoolCondition : BaseCondition
     {
         private bool _value;
 
-
-        public BoolCondition(bool _value)
+        /// <summary>
+        /// Creates condition. Used only for serialization.
+        /// </summary>
+        public BoolCondition()
         {
-            this._value = _value;
         }
 
+        /// <summary>
+        /// Creates <see cref="BoolCondition"/>
+        /// </summary>
+        /// <param name="value"></param>
+        public BoolCondition(bool value)
+        {
+            _value = value;
+        }
+
+        /// <summary>
+        /// Gets or sets value.
+        /// </summary>
         [XmlAttribute("value")]
         public bool Value
         {

@@ -50,7 +50,7 @@ namespace Spolty.Framework.Parameters.Joins
             {
                 current.RemoveDuplicates();
                 parentNode = new JoinNode(current[0].Left.EntityType);
-                JoinNode joinNode = new JoinNode(current[0].Right.EntityType, current[0].JoinType, current[0].Left.Fields, current[0].Right.Fields);
+                JoinNode joinNode = new JoinNode(current[0].Right.EntityType, current[0].Left.Fields, current[0].Right.Fields, current[0].JoinType);
                 parentNode.ChildNodes.Add(joinNode);
                 for (int index = 1; index < current.Count; index++)
                 {
@@ -67,7 +67,7 @@ namespace Spolty.Framework.Parameters.Joins
                             throw new SpoltyException("joinNode is not found");
                         }
                     }
-                    joinNode.ChildNodes.Add(new JoinNode(current[index].Right.EntityType, current[index].JoinType, current[index].Left.Fields, current[index].Right.Fields));
+                    joinNode.ChildNodes.Add(new JoinNode(current[index].Right.EntityType, current[index].Left.Fields, current[index].Right.Fields, current[index].JoinType));
                 }
             }
             return parentNode;

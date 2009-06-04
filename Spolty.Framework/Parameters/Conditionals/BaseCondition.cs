@@ -24,7 +24,7 @@ namespace Spolty.Framework.Parameters.Conditionals
         }
 
         /// <summary>
-        /// Gets or sets comparison operator
+        /// Gets or sets comparison operator.
         /// </summary>
         [XmlAttribute("operator")]
         public ConditionOperator Operator
