@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
-//using Spolty.Framework.Parameters.Aggregations;
-//using Spolty.Framework.Parameters.Aggregations.Enums;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
 
@@ -22,23 +21,21 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         public Expression Make(IEnumerable<BaseCondition> conditionals, Expression sourceExpression)
         {
-            if (conditionals == null)
-            {
-                throw new ArgumentNullException("conditionals");
-            }
+            Checker.CheckArgumentNull(conditionals, "conditionals");
+            Checker.CheckArgumentNull(sourceExpression, "sourceExpression");
 
-            Type sourceType = GetTemplateType(sourceExpression);
-            ParameterExpression p = GetParameterExpression(sourceType, sourceType.Name);
-            foreach (BaseCondition condItem in conditionals)
+            Type sourceType = GetGenericType(sourceExpression);
+            ParameterExpression parameterExpression = CreateOrGetParameterExpression(sourceType, sourceType.Name);
+            foreach (BaseCondition baseCondition in conditionals)
             {
-                Expression body = MakeSingleCondition(condItem, p, ref sourceExpression);
+                Expression body = MakeConditionExpression(baseCondition, parameterExpression, ref sourceExpression);
 
                 if (body == null)
                 {
                     continue;
                 }
 
-                sourceExpression = MakeWhere(sourceType, sourceExpression, body, p);
+                sourceExpression = MakeWhere(sourceType, sourceExpression, body, parameterExpression);
             }
 
             return sourceExpression;
@@ -46,7 +43,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         #endregion
 
-        private Expression MakeSingleCondition(
+        private Expression MakeConditionExpression(
             BaseCondition condItem,
             ParameterExpression parameter,
             ref Expression sourceExpression)
@@ -57,16 +54,16 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             if (condItem is Condition)
             {
                 cond = (Condition) condItem;
-                Type sourceType = GetTemplateType(sourceExpression);
+                Type sourceType = GetGenericType(sourceExpression);
 
                 if (cond.ElementType == null)
                 {
-                    pe = GetParameterExpression(sourceType, sourceType.Name);
+                    pe = CreateOrGetParameterExpression(sourceType, sourceType.Name);
                 }
                 else
                 {
                     var condition = ((Condition) condItem);
-                    pe = GetParameterExpression(condition.ElementType, condition.ElementType.Name);
+                    pe = CreateOrGetParameterExpression(condition.ElementType, condition.ElementType.Name);
                 }
                 body = MakeSimpleCondition(cond, pe, ref sourceExpression);
             }
@@ -100,7 +97,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     else
                     {
                         var leftCondition = ((Condition)biCond.LeftCondition);
-                        pe = GetParameterExpression(leftCondition.ElementType, leftCondition.ElementType.Name);
+                        pe = CreateOrGetParameterExpression(leftCondition.ElementType, leftCondition.ElementType.Name);
                     }
 
                     if (biCond.LeftCondition is Condition)
@@ -111,7 +108,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     }
                     else
                     {
-                        leftExpr = MakeSingleCondition(biCond.LeftCondition, pe, ref sourceExpression);
+                        leftExpr = MakeConditionExpression(biCond.LeftCondition, pe, ref sourceExpression);
                     }
                 }
 
@@ -124,7 +121,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     else
                     {
                         var rightCondition = ((Condition)biCond.RightCondition);
-                        pe = GetParameterExpression(rightCondition.ElementType, rightCondition.ElementType.Name);
+                        pe = CreateOrGetParameterExpression(rightCondition.ElementType, rightCondition.ElementType.Name);
                     }
 
                     if (biCond.RightCondition is Condition)
@@ -136,7 +133,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     else
                     {
                         rightExpr =
-                            MakeSingleCondition(biCond.RightCondition, pe, ref sourceExpression);
+                            MakeConditionExpression(biCond.RightCondition, pe, ref sourceExpression);
                     }
                 }
 
@@ -170,15 +167,15 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         private Expression MakeSimpleCondition(
             Condition cond,
-            ParameterExpression param,
+            Expression param,
             ref Expression sourceExpression)
         {
             Expression body = null;
             const int mainPropertyIndex = 0;
             const int secondaryPropertyIndex = 1;
             string[] properties = cond.FieldName.Split('.');
-            Type sourceType = GetTemplateType(sourceExpression);
-            Type parameterType = GetTemplateType(param);
+            Type sourceType = GetGenericType(sourceExpression);
+            Type parameterType = GetGenericType(param);
 
             Type workType = sourceType.Name == parameterType.Name ? sourceType : parameterType;
             PropertyInfo pi = workType.GetProperty(properties[mainPropertyIndex]);
@@ -222,7 +219,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return body;
         }
 
-        private static Expression MakeSimpleCondition(FieldCondition fieldCondition)
+        private Expression MakeSimpleCondition(FieldCondition fieldCondition)
         {
             PropertyInfo leftPropertyInfo = fieldCondition.LeftElementType.GetProperty(fieldCondition.LeftFieldName);
             if (leftPropertyInfo == null)
@@ -237,14 +234,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             }
 
             ParameterExpression leftParam =
-                GetParameterExpression(fieldCondition.LeftElementType, fieldCondition.LeftElementType.Name);
+                CreateOrGetParameterExpression(fieldCondition.LeftElementType, fieldCondition.LeftElementType.Name);
             ParameterExpression rightParam =
-                GetParameterExpression(fieldCondition.RightElementType, fieldCondition.RightElementType.Name);
+                CreateOrGetParameterExpression(fieldCondition.RightElementType, fieldCondition.RightElementType.Name);
 
             Expression leftExpression =
-                GetPropertyExpression(fieldCondition.LeftElementType, fieldCondition.LeftFieldName, leftParam);
+                CreatePropertyExpression(fieldCondition.LeftElementType, fieldCondition.LeftFieldName, leftParam);
             Expression rightExpression =
-                GetPropertyExpression(fieldCondition.RightElementType, fieldCondition.RightFieldName, rightParam);
+                CreatePropertyExpression(fieldCondition.RightElementType, fieldCondition.RightFieldName, rightParam);
 
             rightExpression =
                 ConvertOrCastInnerPropertyExpression(leftPropertyInfo.PropertyType, rightPropertyInfo, rightExpression);
@@ -306,7 +303,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         {
             LambdaExpression lambdaExpression = Expression.Lambda(body, parameter);
 
-            return CallQueryableMethod("Where", new[] {sourceType}, source, Expression.Quote(lambdaExpression));
+            return CallQueryableMethod(MethodName.Where, new[] {sourceType}, source, Expression.Quote(lambdaExpression));
         }
     }
 }

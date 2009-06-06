@@ -1,7 +1,6 @@
 using System;
 using System.Xml.Serialization;
 using Spolty.Framework.Parameters.Conditionals.Enums;
-using Spolty.Framework.Parameters.Misc;
 
 namespace Spolty.Framework.Parameters.Conditionals
 {
@@ -158,15 +157,6 @@ namespace Spolty.Framework.Parameters.Conditionals
                 }
             }
             return false;
-        }
-
-        public static implicit operator KeyValueParameter(Condition item)
-        {
-            if (item == null)
-            {
-                throw new ArgumentNullException("item");
-            }
-            return new KeyValueParameter(item.FieldName, item.Value);
         }
 
         ///<summary>

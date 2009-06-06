@@ -1,4 +1,4 @@
-﻿namespace Spolty.Framework.ExpressionMakers.Linq
+namespace Spolty.Framework.ExpressionMakers.Linq
 {
     internal static class MethodName
     {
@@ -18,5 +18,7 @@
         public const string Except = "Except";
         public const string First = "First";
         public const string FirstOrDefault = "FirstOrDefault";
+        public const string GroupJoin = "GroupJoin";
+        public const string Where = "Where";
     }
 }

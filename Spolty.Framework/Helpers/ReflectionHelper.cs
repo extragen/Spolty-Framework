@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using Spolty.Framework.Checkers;
 
 namespace Spolty.Framework.Helpers
 {
@@ -12,13 +13,16 @@ namespace Spolty.Framework.Helpers
                                                       BindingFlags.DeclaredOnly | BindingFlags.NonPublic |
                                                       BindingFlags.Instance;
 
-        public static MemberInfo GetMemberInfo(Type t, string name)
+        public static MemberInfo GetMemberInfo(Type type, string name)
         {
-            if (t == null)
+            Checker.CheckArgumentNull(type, "type");
+
+            if (String.IsNullOrEmpty(name))
             {
-                throw new ArgumentNullException("t");
+                throw new ArgumentNullException("name");
             }
-            MemberInfo[] res = t.GetMember(name, PublicMemberFlag | PrivateMemberFlag);
+
+            MemberInfo[] res = type.GetMember(name, PublicMemberFlag | PrivateMemberFlag);
             if (res != null && res.Length > 0)
             {
                 return res[0];
@@ -26,77 +30,64 @@ namespace Spolty.Framework.Helpers
             return null;
         }
 
-        public static Type GetMemberType(MemberInfo mi)
+        public static Type GetMemberType(MemberInfo memberInfo)
         {
-            if (mi == null)
+            Checker.CheckArgumentNull(memberInfo, "memberInfo");
+
+            if (memberInfo is FieldInfo)
             {
-                throw new ArgumentNullException("mi");
-            }
-            if (mi is FieldInfo)
-            {
-                FieldInfo fi = (FieldInfo)mi;
+                FieldInfo fi = (FieldInfo)memberInfo;
                 return fi.FieldType;
             }
-            if (!(mi is PropertyInfo))
+            if (!(memberInfo is PropertyInfo))
             {
-                throw new NotSupportedException(String.Format("{0} is not supported.", mi.GetType().Name));
+                throw new NotSupportedException(String.Format("{0} is not supported.", memberInfo.GetType().Name));
             }
-            PropertyInfo pi = (PropertyInfo) mi;
+            PropertyInfo pi = (PropertyInfo) memberInfo;
             return pi.PropertyType;
         }
 
-        public static object GetValue(MemberInfo mi, object source)
+        public static object GetValue(MemberInfo memberInfo, object source)
         {
-            if (mi == null)
-            {
-                throw new ArgumentNullException("mi");
-            }
+            Checker.CheckArgumentNull(memberInfo, "memberInfo");
+            Checker.CheckArgumentNull(source, "source");
 
-            if (source == null)
+            if (memberInfo is FieldInfo)
             {
-                throw new ArgumentNullException("source");
-            }
-
-            if (mi is FieldInfo)
-            {
-                FieldInfo fi = (FieldInfo) mi;
+                FieldInfo fi = (FieldInfo) memberInfo;
                 return fi.GetValue(source);
             }
 
-            else if (mi is PropertyInfo)
+            if (memberInfo is PropertyInfo)
             {
-                PropertyInfo pi = (PropertyInfo) mi;
+                PropertyInfo pi = (PropertyInfo) memberInfo;
                 return pi.GetValue(source, null);
             }
             else
             {
-                throw new NotSupportedException(String.Format("{0} is not supported.", mi.GetType().Name));
+                throw new NotSupportedException(String.Format("{0} is not supported.", memberInfo.GetType().Name));
             }
         }
 
-        public static void SetValue(MemberInfo mi, object source, object value)
+        public static void SetValue(MemberInfo memberInfo, object source, object value)
         {
-            if (mi == null)
+            Checker.CheckArgumentNull(memberInfo, "memberInfo");
+            Checker.CheckArgumentNull(source, "source");
+            Checker.CheckArgumentNull(value, "value");
+
+            if (memberInfo is FieldInfo)
             {
-                throw new ArgumentNullException("mi");
-            }
-            if (source == null)
-            {
-                throw new ArgumentNullException("source");
-            }
-            if (mi is FieldInfo)
-            {
-                FieldInfo fi = (FieldInfo)mi;
+                FieldInfo fi = (FieldInfo)memberInfo;
                 fi.SetValue(source, value);
             }
-            else if (mi is PropertyInfo)
+            else if (memberInfo is PropertyInfo)
             {
-                PropertyInfo pi = (PropertyInfo)mi;
+                PropertyInfo pi = (PropertyInfo)memberInfo;
                 pi.SetValue(source, value, null);
             }
             else
             {
-                throw new NotSupportedException(String.Format("{0} is not supported.", mi.GetType().Name));
+                throw new NotSupportedException(String.Format("{0} is not supported.", memberInfo.GetType().Name));
             }
         }
 

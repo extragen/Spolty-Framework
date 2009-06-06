@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 using Spolty.Framework.Activators;
 using Spolty.Framework.Checkers;
 using Spolty.Framework.ConfigurationSections;
@@ -471,5 +472,10 @@ namespace Spolty.Framework.Designers
         }
 
         #endregion
+
+        public override string ToString()
+        {
+            return _expression.ToString();
+        }
     }
 }

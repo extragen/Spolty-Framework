@@ -8,7 +8,6 @@ using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
 using Spolty.Framework.Helpers;
-using Spolty.Framework.Storages;
 
 namespace Spolty.Framework.ExpressionMakers.Linq
 {
@@ -51,8 +50,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             Checker.CheckArgumentNull(source, "source");
             Checker.CheckArgumentNull(except, "except");
 
-            Type sourceType = GetTemplateType(source);
-            Type exceptType = GetTemplateType(except);
+            Type sourceType = GetGenericType(source);
+            Type exceptType = GetGenericType(except);
 
             if (sourceType != exceptType)
             {
@@ -66,7 +65,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         {
             Checker.CheckArgumentNull(source, "source");
 
-            return CallQueryableMethod(MethodName.Skip, new[] { GetTemplateType(source) }, source, Expression.Constant(count));
+            return CallQueryableMethod(MethodName.Skip, new[] { GetGenericType(source) }, source, Expression.Constant(count));
         }
 
         Expression IExpressionMaker.MakeTake(int count, Expression source)
@@ -74,7 +73,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             Checker.CheckArgumentNull(source, "source");
 
             //TODO: for sequence
-            return CallQueryableMethod(MethodName.Take, new[] { GetTemplateType(source)}, source, Expression.Constant(count));
+            return CallQueryableMethod(MethodName.Take, new[] { GetGenericType(source)}, source, Expression.Constant(count));
             //return QueryExpression.Take(source, Expression.Constant(count));
         }
 
@@ -83,8 +82,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             Checker.CheckArgumentNull(source, "source");
             Checker.CheckArgumentNull(union, "union");
 
-            Type sourceType = GetTemplateType(source);
-            Type exceptType = GetTemplateType(union);
+            Type sourceType = GetGenericType(source);
+            Type exceptType = GetGenericType(union);
 
             if (sourceType != exceptType)
             {
@@ -99,44 +98,44 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         {
             Checker.CheckArgumentNull(source, "source");
 
-            return CallQueryableMethod(MethodName.Distinct, new[] { GetTemplateType(source) }, source);
+            return CallQueryableMethod(MethodName.Distinct, new[] { GetGenericType(source) }, source);
         }
 
         Expression IExpressionMaker.MakeAny(Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
-            return CallQueryableMethod(MethodName.Any, new[] {GetTemplateType(source)}, source);
+            return CallQueryableMethod(MethodName.Any, new[] {GetGenericType(source)}, source);
         }
 
         Expression IExpressionMaker.MakeCount(Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
            
-            return CallQueryableMethod(MethodName.Count, new[] { GetTemplateType(source) }, source);
+            return CallQueryableMethod(MethodName.Count, new[] { GetGenericType(source) }, source);
         }
 
         Expression IExpressionMaker.MakeFirst(Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
-            return CallQueryableMethod(MethodName.First, new[] { GetTemplateType(source) }, source);
+            return CallQueryableMethod(MethodName.First, new[] { GetGenericType(source) }, source);
         }
 
         Expression IExpressionMaker.MakeFirstOrDefault(Expression source)
         {
             Checker.CheckArgumentNull(source, "source");
 
-            return CallQueryableMethod(MethodName.FirstOrDefault, new[] { GetTemplateType(source) }, source);
+            return CallQueryableMethod(MethodName.FirstOrDefault, new[] { GetGenericType(source) }, source);
         }
 
         #endregion
 
         #region Utility Methods
 
-        internal static Type GetTemplateType(Expression sourceExpression)
+        internal static Type GetGenericType(Expression sourceExpression)
         {
-            const int templateIndex = 0;
+            const int genericIndex = 0;
 
             if (!sourceExpression.Type.IsGenericType)
             {
@@ -150,10 +149,10 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new ArgumentException("sourceExpression is not generic source");
             }
 
-            return genericArguments[templateIndex];
+            return genericArguments[genericIndex];
         }
 
-        internal static Expression GetPropertyExpression(Type sourceType, string propertyName, Expression parameter)
+        internal static Expression CreatePropertyExpression(Type sourceType, string propertyName, Expression parameter)
         {
             PropertyInfo propertyInfo = sourceType.GetProperty(propertyName);
             if (propertyInfo == null)
@@ -164,27 +163,17 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return Expression.Property(parameter, propertyInfo);
         }
 
-        internal static bool ContainsParameterExpression(Type type)
+        internal ParameterExpression CreateOrGetParameterExpression(Type type, string name)
         {
-            var parametersDictionary =
-                (Dictionary<Type, ParameterExpression>)ThreadStorage.Current[ParameterDictionaryKey];
-            if (parametersDictionary == null)
+            object storeValue;
+            if (!Factory.Store.TryGetValue(ParameterDictionaryKey, out storeValue))
             {
-                parametersDictionary = new Dictionary<Type, ParameterExpression>();
-                ThreadStorage.Current[ParameterDictionaryKey] = parametersDictionary;
+                storeValue = new Dictionary<Type, ParameterExpression>();
+                Factory.Store.Add(ParameterDictionaryKey, storeValue);
             }
-            return parametersDictionary.ContainsKey(type);
-        }
 
-        internal static ParameterExpression GetParameterExpression(Type type, string name)
-        {
-            var parametersDictionary =
-                (Dictionary<Type, ParameterExpression>) ThreadStorage.Current[ParameterDictionaryKey];
-            if (parametersDictionary == null)
-            {
-                parametersDictionary = new Dictionary<Type, ParameterExpression>();
-                ThreadStorage.Current[ParameterDictionaryKey] = parametersDictionary;
-            }
+            var parametersDictionary = (Dictionary<Type, ParameterExpression>) storeValue;
+
             ParameterExpression result;
             parametersDictionary.TryGetValue(type, out result);
             if (result == null)
@@ -195,18 +184,18 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return result;
         }
 
-        internal static LambdaExpression GetLambdaExpression(Type sourceType, string includingProperty,
+        internal static LambdaExpression CreateLambdaExpression(Type sourceType, string includingProperty,
                                                              ParameterExpression parameter, MemberExpression member)
         {
             Expression property;
             if (member == null)
             {
-                property = GetPropertyExpression(sourceType, includingProperty, parameter);
+                property = CreatePropertyExpression(sourceType, includingProperty, parameter);
             }
             else
             {
                 property =
-                    GetPropertyExpression(ReflectionHelper.GetMemberType(member.Member), includingProperty, member);
+                    CreatePropertyExpression(ReflectionHelper.GetMemberType(member.Member), includingProperty, member);
             }
             return Expression.Lambda(property, parameter);
         }
@@ -223,7 +212,6 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 }
                 else
                 {
-                    //Expression.Cast
                     innerPropertyExpression = Expression.TypeAs(innerPropertyExpression, outerPropertyType);
                 }
             }

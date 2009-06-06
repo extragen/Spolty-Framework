@@ -97,15 +97,12 @@
     <Compile Include="Parameters\Joins\JoinList.cs" />
     <Compile Include="Parameters\Joins\JoinNode.cs" />
     <Compile Include="Parameters\Joins\JoinNodeList.cs" />
-    <Compile Include="Parameters\Misc\KeyValueParameter.cs" />
     <Compile Include="Parameters\Orderings\Enums\SortDirection.cs" />
     <Compile Include="Parameters\Orderings\Ordering.cs" />
     <Compile Include="Parameters\Orderings\OrderingList.cs" />
     <Compile Include="Parameters\Paging\PagingParameter.cs" />
     <Compile Include="Parsers\ParametersParser.cs" />
-    <Compile Include="Storages\ThreadStorage.cs" />
     <Compile Include="Helpers\ReflectionHelper.cs" />
-    <Compile Include="Helpers\SubmitHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Designers\QueryDesinger.cs" />
     <Compile Include="System\ClassFactory.cs" />

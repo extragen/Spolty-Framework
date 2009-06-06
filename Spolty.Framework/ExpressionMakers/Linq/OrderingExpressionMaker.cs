@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -29,19 +29,19 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 var alredyOrdered = new List<Type>();
                 for (int i = 0; i < orderingList.Count; i++)
                 {
-                    Type sourceType = GetTemplateType(source);
+                    Type sourceType = GetGenericType(source);
                     Ordering ordering = orderingList[i];
                     string propertyName = ordering.ColumnName;
                     Type elementType = ordering.ElementType ?? sourceType;
 
                     PropertyInfo property;
-                    ParameterExpression sourceParameter = GetParameterExpression(sourceType, sourceType.Name);
+                    ParameterExpression sourceParameter = CreateOrGetParameterExpression(sourceType, sourceType.Name);
                     MemberExpression propertyExpression = null;
                     if (elementType != sourceType)
                     {
                         PropertyInfo relationProperty = sourceType.GetProperty(elementType.Name);
 
-                        if (relationProperty == null)
+                        if (relationProperty == null || relationProperty.PropertyType.IsGenericType)
                         {
                             continue;
                         }
@@ -58,7 +58,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                         (!property.PropertyType.IsGenericType ||
                          property.PropertyType.GetGenericTypeDefinition() == typeof (Nullable<>)))
                     {
-                        LambdaExpression orderingExpression = GetLambdaExpression(elementType,
+                        LambdaExpression orderingExpression = CreateLambdaExpression(elementType,
                                                                                   ordering.ColumnName,
                                                                                   sourceParameter, propertyExpression);
                         var typeArguments = new Type[2];

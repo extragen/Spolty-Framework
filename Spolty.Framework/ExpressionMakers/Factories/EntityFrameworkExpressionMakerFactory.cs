@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Objects;
 using System.Linq;
 using Spolty.Framework.Checkers;
@@ -12,9 +13,16 @@ namespace Spolty.Framework.ExpressionMakers.Factories
         {
             Checker.CheckArgumentNull(currentContext as ObjectContext, "currentContext");
             CurrentContext = currentContext;
+            Store = new Dictionary<string, object>(0);
         }
 
         #region IExpressionMakerFactory Members
+
+        #region Implementation of IExpressionMakerFactory
+
+        public Dictionary<string, object> Store { get; private set; }
+
+        #endregion
 
         public object CurrentContext { get; private set; }
 

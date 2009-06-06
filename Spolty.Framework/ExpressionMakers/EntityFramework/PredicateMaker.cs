@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Data.Objects;
 using System.Linq.Expressions;
 using System.Text;
+using Spolty.Framework.Checkers;
 using Spolty.Framework.ExpressionMakers.Factories;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
@@ -22,10 +23,7 @@ namespace Spolty.Framework.ExpressionMakers.EntityFramework
 
         public PredicateMaker(IEnumerable<BaseCondition> conditionals, string tableName)
         {
-            if (conditionals == null)
-            {
-                throw new ArgumentNullException("conditionals");
-            }
+            Checker.CheckArgumentNull(conditionals, "conditionals");
 
             if (String.IsNullOrEmpty(tableName))
             {
@@ -205,10 +203,5 @@ namespace Spolty.Framework.ExpressionMakers.EntityFramework
         {
             throw new NotImplementedException();
         }
-
-        public Expression MakeAggregate(Expression sourceExpression, ParameterExpression parameter, ConditionList conditionals, bool singleItem)
-        {
-            throw new NotImplementedException();
-        }
-    }
+     }
 }

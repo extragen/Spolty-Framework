@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -16,14 +16,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         {
         }
 
-        public static List<LambdaExpression> MakeIncluding(Type sourceType, Expression source, LoadNode rootNode)
+        public List<LambdaExpression> MakeIncluding(Type sourceType, Expression source, LoadNode rootNode)
         {
             if (rootNode.ParentNode != null && !rootNode.Including)
             {
                 return null;
             }
 
-            ParameterExpression parameter = GetParameterExpression(sourceType, sourceType.Name);
+            ParameterExpression parameter = CreateOrGetParameterExpression(sourceType, sourceType.Name);
 
             MemberExpression memberExpression = null;
             if (rootNode.ParentNode == null &&
@@ -73,19 +73,19 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     Expression property;
                     if (memberExpression == null)
                     {
-                        property = GetPropertyExpression(sourceType, childNode.PropertyName, parameter);
+                        property = CreatePropertyExpression(sourceType, childNode.PropertyName, parameter);
                     }
                     else
                     {
                         property =
-                            GetPropertyExpression(childNode.ParentNode.EntityType, childNode.PropertyName,
+                            CreatePropertyExpression(childNode.ParentNode.EntityType, childNode.PropertyName,
                                                   memberExpression);
                     }
                     newExpression = MakeIncluding(childNode.EntityType, property, childNode);
                 }
                 else
                 {
-                    newExpression.Add(GetLambdaExpression(sourceType, childNode.PropertyName, parameter,
+                    newExpression.Add(CreateLambdaExpression(sourceType, childNode.PropertyName, parameter,
                                                           memberExpression));
                 }
                 expressionList.AddRange(newExpression);
@@ -94,14 +94,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return expressionList;
         }
 
-        public static List<LambdaExpression> MakeIncluding(Expression source, params Type[] includingTypes)
+        public List<LambdaExpression> MakeIncluding(Expression source, params Type[] includingTypes)
         {
-            Type sourceType = GetTemplateType(source);
-            ParameterExpression parameter = GetParameterExpression(sourceType, sourceType.Name);
+            Type sourceType = GetGenericType(source);
+            ParameterExpression parameter = CreateOrGetParameterExpression(sourceType, sourceType.Name);
             var resultExpression = new List<LambdaExpression>();
             foreach (Type includingType in includingTypes)
             {
-                LambdaExpression lambdaExpression = GetLambdaExpression(sourceType, includingType.Name, parameter, null);
+                LambdaExpression lambdaExpression = CreateLambdaExpression(sourceType, includingType.Name, parameter, null);
                 resultExpression.Add(lambdaExpression);
             }
             return resultExpression;
