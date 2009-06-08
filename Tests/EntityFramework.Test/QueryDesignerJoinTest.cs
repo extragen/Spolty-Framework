@@ -111,30 +111,6 @@ namespace EntityFramework.Test
             CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
-        [Test]
-        public void TestJoinWithOneChildByAssociationFileds()
-        {
-            const int resultRowCount = 77;
-            //create root node
-            var root = new JoinNode(typeof(Products));
-
-            // add child node Categories with propertyName "Products". 
-            // Because Categories linked with Products by next property:
-            // public EntitySet<Products> Products 
-            root.AddChildren(new JoinNode(typeof(Categories), new[] { "CategoryID" }, new[] { "CategoryID" }));
-
-            var queryDesinger = new QueryDesinger(context, root);
-            var list = new List<Products>(queryDesinger.Cast<Products>());
-
-            // check numbers of entity
-            Assert.AreEqual(resultRowCount, list.Count);
-
-            string query =
-                @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID";
-
-            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
-        }
-
         /// <summary>
         ///  Query created in Microsoft SQL Server Management Studio
         /// 
@@ -358,7 +334,6 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var queryDesinger = new QueryDesinger(context, typeof(Products));
             OrderingList parameteres = new OrderingList(new Ordering("ProductName", typeof(Products)), new Ordering("CategoryName", SortDirection.Descending, typeof(Categories)));
             queryDesinger.AddJoins(root, parameteres);
-//            queryDesinger.AddOrderings(p)
             queryDesinger.Skip(10).Take(10);
             var list = new List<Products>(queryDesinger.Cast<Products>());
             Assert.AreEqual(resultRowCount, list.Count);
@@ -648,15 +623,18 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // create filter by Products.ProductName like "%l%"
             var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            root.AddConditions(productNameCondition);
+
             // create filter by Categories.Description like "Sweet%"
             var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Categories));
+            categoryNode.AddConditions(categoryNameCondition);
 
-            // create condition list with already created conditions
-            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+            // create ordering, because we call Skip and Take method.
+            Ordering order = new Ordering("ProductName");
 
             // make join Products table with Categories filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger.AddJoins(root, new OrderingList(order));
 
             QueryDesinger cloneQueryDesigner = (QueryDesinger)queryDesinger.Clone();
 
@@ -689,15 +667,18 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // create filter by Products.ProductName like "%l%"
             var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            root.AddConditions(productNameCondition);
+
             // create filter by Categories.Description like "Sweet%"
             var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Categories));
+            categoryNode.AddConditions(categoryNameCondition);
 
-            // create condition list with already created conditions
-            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+            // create ordering, because we call Skip and Take method.
+            Ordering order = new Ordering("ProductName");
 
             // make join Products table with Categories filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger.AddJoins(root, new OrderingList(order));
 
             QueryDesinger cloneQueryDesigner = (QueryDesinger)queryDesinger.Clone();
 
@@ -729,15 +710,15 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // create filter by Products.ProductName like "%l%"
             var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            root.AddConditions(productNameCondition);
+
             // create filter by Categories.Description like "Sweet%"
             var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Categories));
-
-            // create condition list with already created conditions
-            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+            categoryNode.AddConditions(categoryNameCondition);
 
             // make join Products table with Categories filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger.AddJoins(root);
 
             object first = queryDesinger.First();
 
@@ -763,15 +744,15 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // create filter by Products.ProductName like "%l%"
             var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
+            root.AddConditions(productNameCondition);
+
             // create filter by Categories.Description like "Sweet%"
             var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Categories));
-
-            // create condition list with already created conditions
-            var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
+            categoryNode.AddConditions(categoryNameCondition);
 
             // make join Products table with Categories filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger.AddJoins(root);
 
             object first = queryDesinger.FirstOrDefault();
 
