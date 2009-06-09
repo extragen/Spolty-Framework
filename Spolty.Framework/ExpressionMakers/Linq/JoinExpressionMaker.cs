@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.Linq.Mapping;
 using System.Linq;
@@ -159,16 +158,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         #region Left Join Makers Method
 
-        internal Expression MakeLeftJoin(Expression outerSourceExpression,
-                                         Expression innerSourceExpression, Type unitingTyped,
-                                         Type resultSelectorType)
-        {
-            return
-                MakeLeftJoin(outerSourceExpression, innerSourceExpression, unitingTyped, resultSelectorType,
-                             null);
-        }
-
-        protected Expression MakeLeftJoin(Expression outerSourceExpression,
+        protected virtual Expression MakeLeftJoin(Expression outerSourceExpression,
                                   Expression innerSourceExpression, Type unitingTyped,
                                   Type resultSelectorType, JoinNode childNode)
         {
@@ -366,7 +356,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                                         outerKeySelector.Body.Type, resultSelector.Body.Type
                                     };
 
-            return CallQueryableMethod("Join", typeArguments, outer, inner, Expression.Quote(outerKeySelector),
+            return CallQueryableMethod(MethodName.Join, typeArguments, outer, inner, Expression.Quote(outerKeySelector),
                                        Expression.Quote(innerKeySelector), Expression.Quote(resultSelector));
         }
 

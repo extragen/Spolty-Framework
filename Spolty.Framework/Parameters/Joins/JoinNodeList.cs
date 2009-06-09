@@ -20,5 +20,7 @@ namespace Spolty.Framework.Parameters.Joins
             }
             base.Add(joinChildNode);
         }
+
+
     }
 }

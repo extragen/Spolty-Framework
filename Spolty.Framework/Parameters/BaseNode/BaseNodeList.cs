@@ -41,9 +41,17 @@ namespace Spolty.Framework.Parameters.BaseNode
             }
         }
 
+        public new void AddRange(IEnumerable<BaseNode> baseNodes)
+        {
+            foreach (var node in baseNodes)
+            {
+                Add(node);
+            }
+        }
+
         public void AddRange(params BaseNode[] baseNodes)
         {
-            AddRange((IEnumerable<BaseNode>) baseNodes);
+            AddRange((IEnumerable<BaseNode>)baseNodes);
         }
 
         public new int BinarySearch(BaseNode item)

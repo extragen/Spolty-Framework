@@ -45,7 +45,7 @@ namespace Spolty.Framework.Designers
 
         public IEnumerator GetEnumerator()
         {
-            object returnValue = Provider.Execute(_expression);
+            object returnValue = Provider.CreateQuery(Expression);
 
             return ((IEnumerable) returnValue).GetEnumerator();
         }

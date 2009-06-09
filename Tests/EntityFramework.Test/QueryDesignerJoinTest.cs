@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq.Dynamic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Linq.Expressions;
 using EntityFrameworkNorthwind.Entities;
 using NUnit.Framework;
 using Spolty.Framework.Designers;
+using Spolty.Framework.ExpressionMakers.Factories;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
 using Spolty.Framework.Parameters.Joins;
 using Spolty.Framework.Parameters.Joins.Enums;
 using Spolty.Framework.Parameters.Orderings;
 using Spolty.Framework.Parameters.Orderings.Enums;
+using DynamicExpression=System.Linq.Dynamic.DynamicExpression;
 
 namespace EntityFramework.Test
 {
@@ -451,13 +454,13 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add first child node Categories with propertyName "Products". 
             // Because Categories linked with Products by next property:
             // public EntitySet<Products> Products 
-            var categoryNode = new JoinNode(typeof(Categories));
+            var categoryNode = new JoinNode(typeof(Categories), "Products");
             root.AddChildren(categoryNode);
 
             // add second child node Order_Details. PropertyName not defined
             // because Order_Details linked with Products by next property:
             // public Products Products - name of property is equal name of type 
-            var orderDetailNode = new JoinNode(typeof(Order_Details));
+            var orderDetailNode = new JoinNode(typeof(Order_Details), "Products");
 
             root.AddChildren(orderDetailNode);
 
@@ -477,16 +480,16 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var conditionals = new ConditionList(orCondition, discountCondition);
 
             // assign conditions
-            queryDesinger.AddConditions(conditionals);
+//            queryDesinger.AddConditions(conditionals);
 
             // make Distinct
             queryDesinger.Distinct();
 
             // make orderings by ProductName and CategoryName
             var productNameOrder = new Ordering("ProductName", SortDirection.Ascending, typeof(Products));
-            var categoryNameOrder = new Ordering("CategoryName", SortDirection.Descending, typeof(Categories));
+//            var categoryNameOrder = new Ordering("CategoryName", SortDirection.Descending, typeof(Categories));
 
-            queryDesinger.AddOrderings(new OrderingList(productNameOrder, categoryNameOrder));
+            queryDesinger.AddOrderings(new OrderingList(productNameOrder/*, categoryNameOrder*/));
 
             IQueryable<Products> distictedProducts = queryDesinger.Cast<Products>();
 
@@ -551,21 +554,21 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add second child node Order_Details. PropertyName not defined
             // because Order_Details linked with Products by next property:
             // public Products Products - name of property is equal name of type 
-            var orderDetailNode = new JoinNode(typeof(Order_Details));
-            var categoryNode = new JoinNode(typeof(Categories), JoinType.LeftOuterJoin);
-            var supplierNode = new JoinNode(typeof(Suppliers));
+            var orderDetailNode = new JoinNode(typeof(Order_Details), "Products");
+            var categoryNode = new JoinNode(typeof(Categories), "Products", JoinType.LeftOuterJoin);
+            var supplierNode = new JoinNode(typeof(Suppliers), "Products");
             root.AddChildren(orderDetailNode, categoryNode, supplierNode);
 
-            var orderNode = new JoinNode(typeof(Orders));
+            var orderNode = new JoinNode(typeof(Orders), "Order_Details");
             orderDetailNode.AddChildren(orderNode);
 
-            var employeeNode = new JoinNode(typeof(Employees));
+            var employeeNode = new JoinNode(typeof(Employees), "Orders");
             orderNode.AddChildren(employeeNode);
 
-            var territoryNode = new JoinNode(typeof(Territories));
+            var territoryNode = new JoinNode(typeof(Territories), "Employees");
             employeeNode.AddChildren(territoryNode);
 
-            var regionNode = new JoinNode(typeof(Region));
+            var regionNode = new JoinNode(typeof(Region), "Territories");
             territoryNode.AddChildren(regionNode);
 
             var queryDesinger = new QueryDesinger(context, root);
@@ -797,5 +800,17 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             Assert.AreEqual(result, any);
         }
 
+
+        [Test]
+        public void TestLeftOuterJoin()
+        {
+            var root = new JoinNode(typeof(Products));
+            var categoryNode = new JoinNode(typeof(Categories), "Products", JoinType.LeftOuterJoin);
+            root.AddChildren(categoryNode);
+
+            var queryDesinger = new QueryDesinger(context, root);
+
+            var list = new List<Products>(queryDesinger.Cast<Products>());
+        }
     }
 }

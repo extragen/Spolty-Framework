@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Objects;
 using System.Linq;
 using Spolty.Framework.Checkers;
+using Spolty.Framework.ExpressionMakers.EntityFramework;
 using Spolty.Framework.ExpressionMakers.Linq;
 
 namespace Spolty.Framework.ExpressionMakers.Factories
@@ -28,7 +29,7 @@ namespace Spolty.Framework.ExpressionMakers.Factories
 
         public IJoinExpressionMaker CreateJoinExpressionMaker()
         {
-            return new JoinExpressionMaker(this);
+            return new EFJoinMaker(this);
         }
 
         public IOrderingExpressionMaker CreateOrderingExpressionMaker()

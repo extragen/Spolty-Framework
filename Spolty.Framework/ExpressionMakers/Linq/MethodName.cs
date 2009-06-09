@@ -20,5 +20,6 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         public const string FirstOrDefault = "FirstOrDefault";
         public const string GroupJoin = "GroupJoin";
         public const string Where = "Where";
+        public const string Join = "Join";
     }
 }

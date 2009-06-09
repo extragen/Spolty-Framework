@@ -62,7 +62,9 @@
     <Compile Include="ConfigurationSections\FactoryConfiguration.cs" />
     <Compile Include="ConfigurationSections\FactoryConfigurationCollection.cs" />
     <Compile Include="ConfigurationSections\SpoltyFrameworkSectionHandler.cs" />
+    <Compile Include="DynamicQueryable.cs" />
     <Compile Include="Exceptions\SArgumentNullException.cs" />
+    <Compile Include="ExpressionMakers\EntityFramework\EFJoinMaker.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\PredicateConstants.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\PredicateMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ConditionExpressionMaker.cs" />
@@ -71,7 +73,6 @@
     <Compile Include="ExpressionMakers\Factories\IExpressionMakerFactory.cs" />
     <Compile Include="ExpressionMakers\Factories\LinqExpressionMakerFactory.cs" />
     <Compile Include="ExpressionMakers\IExpressionMaker.cs" />
-    <Compile Include="ExpressionMakers\Linq\IncludingExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\JoinExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\MethodName.cs" />
     <Compile Include="ExpressionMakers\Linq\OrderingExpressionMaker.cs" />
