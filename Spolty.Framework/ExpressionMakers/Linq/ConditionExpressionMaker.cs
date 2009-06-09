@@ -13,6 +13,9 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 {
     internal sealed class ConditionExpressionMaker : ExpressionMaker, IConditionExpressionMaker
     {
+        private static readonly Type StringType = typeof(String);
+        private static readonly Type IQueryableType = typeof (IQueryable);
+
         public ConditionExpressionMaker(IExpressionMakerFactory factory) : base(factory)
         {
         }
@@ -189,7 +192,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     piChild = piChild.PropertyType.GetProperty(properties[index]);
                     if (piChild == null)
                     {
-                        if (pi.PropertyType.GetInterface(typeof (IQueryable).Name) != null)
+                        if (pi.PropertyType.GetInterface(IQueryableType.Name) != null)
                         {
                             int previousIndex = index - 1;
                             var condition =
@@ -278,17 +281,17 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     break;
                 case ConditionOperator.StartsWith:
                     body = Expression.Call(leftExpression,
-                                           typeof(String).GetMethod("StartsWith", new[] { typeof(string) }),
+                                           StringType.GetMethod(MethodName.StartsWith, new[] { StringType }),
                                            rightExpression);
                     break;
                 case ConditionOperator.Like:
                     body = Expression.Call(leftExpression,
-                                           typeof (String).GetMethod("Contains", new[] {typeof (string)}),
+                                           StringType.GetMethod(MethodName.Contains, new[] { StringType }),
                                            rightExpression);
                     break;
                 case ConditionOperator.EndsWith:
                     body = Expression.Call(leftExpression,
-                                           typeof(String).GetMethod("EndsWith", new[] { typeof(string) }),
+                                           StringType.GetMethod(MethodName.EndsWith, new[] { StringType }),
                                            rightExpression);
                     break;
             }
@@ -302,8 +305,22 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             ParameterExpression parameter)
         {
             LambdaExpression lambdaExpression = Expression.Lambda(body, parameter);
+            Expression resultExpression = null;
+            if (source.Type.GetInterface(IQueryableType.Name) != null)
+            {
+                resultExpression = CallQueryableMethod(MethodName.Where, new[] {sourceType}, source, Expression.Quote(lambdaExpression));
+            }
+            else if (source.Type.GetInterface(IEnumerableType.Name) != null)
+            {
+                resultExpression = CallEnumerableMethod(MethodName.Where, new[] {sourceType}, source, lambdaExpression);
+            }
+            
+            if (resultExpression == null)
+            {
+                throw new SpoltyException("source not implemented any required interfaces");
+            }
 
-            return CallQueryableMethod(MethodName.Where, new[] {sourceType}, source, Expression.Quote(lambdaExpression));
+            return resultExpression;
         }
     }
 }

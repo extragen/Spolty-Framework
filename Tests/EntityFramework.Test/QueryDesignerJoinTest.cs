@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Objects;
 using System.Linq.Dynamic;
 using System.Configuration;
 using System.Data;
@@ -804,13 +805,38 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
         [Test]
         public void TestLeftOuterJoin()
         {
-            var root = new JoinNode(typeof(Products));
-            var categoryNode = new JoinNode(typeof(Categories), "Products", JoinType.LeftOuterJoin);
+            var res = (from product in context.Products
+                       orderby product.ProductID
+                       select new { product, Products = product.Order_Details.Where(p => p.Quantity > 120), Order_Detail = product.Suppliers });
+            var resutl = res.ToList();
+//            var res = (from categories in context.Categories
+//                       orderby categories.CategoryID
+//                       select new { categories, Products = categories.Products.Where(p => p.ProductName.Contains("l")).Select(p=>p.Order_Details) });
+//            var resutl = res.ToList();
+
+//            foreach (var list1 in resutl)
+//            {
+//                Console.WriteLine(list1.categories.Products.Count);
+//            }
+
+            const string categoryName = "l";
+
+            var root = new JoinNode(typeof(Categories));
+            var categoryNode = new JoinNode(typeof(Products), "Categories", JoinType.LeftOuterJoin);
             root.AddChildren(categoryNode);
+            var orderDetailNode = new JoinNode(typeof (Order_Details), "Products", JoinType.LeftOuterJoin);
+            categoryNode.AddChildren(orderDetailNode);
+//            // add condition for filtering by CategoryName == "Condiments"
+//            categoryNode.AddConditions(new Condition("ProductName", categoryName, ConditionOperator.Like));
 
             var queryDesinger = new QueryDesinger(context, root);
 
-            var list = new List<Products>(queryDesinger.Cast<Products>());
+            var query = queryDesinger;
+            Console.WriteLine("br");
+            foreach (var list1 in query)
+            {
+                Console.WriteLine(list1);
+            }
         }
     }
 }

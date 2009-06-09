@@ -165,14 +165,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         internal ParameterExpression CreateOrGetParameterExpression(Type type, string name)
         {
-            object storeValue;
-            if (!Factory.Store.TryGetValue(ParameterDictionaryKey, out storeValue))
+            object storedValue;
+            if (!Factory.Store.TryGetValue(ParameterDictionaryKey, out storedValue))
             {
-                storeValue = new Dictionary<Type, ParameterExpression>();
-                Factory.Store.Add(ParameterDictionaryKey, storeValue);
+                storedValue = new Dictionary<Type, ParameterExpression>();
+                Factory.Store.Add(ParameterDictionaryKey, storedValue);
             }
 
-            var parametersDictionary = (Dictionary<Type, ParameterExpression>) storeValue;
+            var parametersDictionary = (Dictionary<Type, ParameterExpression>) storedValue;
 
             ParameterExpression result;
             parametersDictionary.TryGetValue(type, out result);
@@ -182,6 +182,32 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 parametersDictionary.Add(type, result);
             }
             return result;
+        }
+
+        internal Type DynamicType
+        {
+            get
+            {
+                object storedValue;
+                if (Factory.Store.TryGetValue("DynamicType", out storedValue))
+                {
+                    return (Type) storedValue;
+                }
+
+                return null;
+            }
+            set
+            {
+                object storedValue;
+                if (Factory.Store.TryGetValue("DynamicType", out storedValue))
+                {
+                    storedValue = value;
+                }
+                else
+                {
+                    Factory.Store.Add("DynamicType", value);
+                }
+            }
         }
 
         internal static LambdaExpression CreateLambdaExpression(Type sourceType, string includingProperty,

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.Linq;
 using System.Data.SqlClient;
 using System.Linq;
 using LinqNorthwind.Entities;
@@ -813,5 +814,42 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             Assert.AreEqual(result, any);
         }
 
+        [Test]
+        public void TestLeftOuterJoin()
+        {
+//            var dlo = new DataLoadOptions();
+//            dlo.AssociateWith<Category>(c => c.Products.Where(p => p.ProductName.Contains("l")));
+//            context.LoadOptions = dlo;
+//            var res1 = (from category in context.Categories
+//                        select category);
+//            foreach (var re in res1)
+//            {
+//                Console.WriteLine(re.CategoryID + " " + re.Products.Count);
+//            }          
+
+            var res = (from product in context.Products
+                       orderby product.ProductID
+                       select new { product, Products = product.Order_Details.Where(p => p.Quantity > 120), Order_Detail = product.Supplier });
+            var resutl = res.ToList();
+            foreach (var list1 in resutl)
+            {
+                Console.WriteLine(list1.product.Order_Details.Count);
+                Console.WriteLine(list1.product.Supplier.CompanyName);
+            }
+
+
+
+//            var res = from categories in context.Categories
+//                      join product in context.Products on categories equals product.Category into ppp
+//                      from p in ppp.DefaultIfEmpty() 
+//                      where p.ProductName.Contains("l")
+//                      select new { categories/*, Products = ppp.DefaultIfEmpty().Where(p => p.ProductName.Contains("l"))*/ };// new {categories, Products = categories.Products.Where(p => p.ProductName.Contains("l"))});}
+//            var resutl = res.ToList();
+//
+//            foreach (var list1 in resutl)
+//            {
+//                Console.WriteLine(list1.categories.Products.Count);
+//            }
+        }
     }
 }

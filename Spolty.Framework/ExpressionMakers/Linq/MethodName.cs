@@ -21,5 +21,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         public const string GroupJoin = "GroupJoin";
         public const string Where = "Where";
         public const string Join = "Join";
+        public const string Contains = "Contains";
+        public const string EndsWith = "EndsWith";
+        public const string StartsWith = "StartsWith";
     }
 }

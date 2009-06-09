@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Objects;
 using System.Linq.Expressions;
 using System.Reflection;
 using Spolty.Framework.ExpressionMakers.Factories;
@@ -21,10 +22,14 @@ namespace Spolty.Framework.ExpressionMakers.EntityFramework
             Type outerType = GetGenericType(outerSourceExpression);
             Type innerType = GetGenericType(innerSourceExpression);
 
-
             ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
+            
+            Expression innerMemberEx = Expression.PropertyOrField(outerParam, innerType.Name);
 
-            MemberExpression innerMemberEx = Expression.PropertyOrField(outerParam, innerType.Name);
+            if (childNode.Conditions.Count > 0)
+            {
+                innerMemberEx = Factory.CreateConditionExpressionMaker().Make(childNode.Conditions, innerMemberEx);
+            }
 
             var outerProperty = new DynamicProperty(outerType.Name, outerType);
             var innerProperty = new DynamicProperty(innerType.Name, innerMemberEx.Type);
@@ -55,8 +60,8 @@ namespace Spolty.Framework.ExpressionMakers.EntityFramework
                                                                 selectNewQueryableExpression,
                                                                 Expression.Quote(resultSelector));
 
-            return leftJoinExpression;
             return selectNewQueryableExpression;
+            return leftJoinExpression;
         }
     }
 }
