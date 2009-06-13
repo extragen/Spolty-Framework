@@ -213,7 +213,7 @@ WHERE Categories.CategoryName = N'Condiments'";
             var queryDesinger = new QueryDesinger(context, root);
             // add condition for filtering by CategoryName == "Condiments"
 
-            queryDesinger.AddConditions(new Condition("CategoryName", categoryName, ConditionOperator.EqualTo,
+            queryDesinger = queryDesinger.Where(new Condition("CategoryName", categoryName, ConditionOperator.EqualTo,
                                                       typeof (Category)));
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
@@ -266,7 +266,7 @@ WHERE Categories.CategoryName = N'Condiments'";
             var categoryCondition = new Condition("CategoryName", categoryName, ConditionOperator.EqualTo,
                                                   typeof (Category));
 
-            queryDesinger.AddConditions(new ConditionList(product, categoryCondition));
+            queryDesinger = queryDesinger.Where(new ConditionList(product, categoryCondition));
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
 
@@ -355,8 +355,12 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, typeof(Product));
-            queryDesinger.AddJoins(root, new OrderingList(new Ordering("ProductName", typeof(Product)), new Ordering("CategoryName", SortDirection.Descending, typeof (Category))));
-            queryDesinger.Skip(10).Take(10);
+            var parameteres = new OrderingList(new Ordering("ProductName", typeof (Product)),
+                                                        new Ordering("CategoryName", SortDirection.Descending,
+                                                                     typeof (Category)));
+            queryDesinger = queryDesinger.Join(root,
+                                               parameteres)
+                                            .Skip(10).Take(10);
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
         }
@@ -419,7 +423,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var conditionals = new ConditionList(orCondition, discountCondition);
 
             // assign conditions
-            queryDesinger.AddConditions(conditionals);
+            queryDesinger = queryDesinger.Where(conditionals);
 
             // make Distinct
             IQueryable<Product> distictedProducts = queryDesinger.Distinct().Cast<Product>();
@@ -498,16 +502,16 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var conditionals = new ConditionList(orCondition, discountCondition);
 
             // assign conditions
-            queryDesinger.AddConditions(conditionals);
+            queryDesinger = queryDesinger.Where(conditionals);
 
             // make Distinct
-            queryDesinger.Distinct();
+            queryDesinger = queryDesinger.Distinct();
 
             // make orderings by ProductName and CategoryName
             var productNameOrder = new Ordering("ProductName", SortDirection.Ascending, typeof (Product));
             var categoryNameOrder = new Ordering("CategoryName", SortDirection.Descending, typeof (Category));
 
-            queryDesinger.AddOrderings(new OrderingList(productNameOrder, categoryNameOrder));
+            queryDesinger = queryDesinger.OrderBy(new OrderingList(productNameOrder, categoryNameOrder));
 
             IQueryable<Product> distictedProducts = queryDesinger.Cast<Product>();
 
@@ -604,7 +608,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var conditionals = new ConditionList(regionCondition, territoryCondition, categoryIDsCondition);
 
             // assign conditions
-            queryDesinger.AddConditions(conditionals);
+            queryDesinger = queryDesinger.Where(conditionals);
 
 
             // make Distinct
@@ -661,14 +665,14 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // make join Product table with Category filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger = queryDesinger.Join(root, conditionList);
 
             QueryDesinger cloneQueryDesigner = (QueryDesinger) queryDesinger.Clone();
 
-            queryDesinger.Skip(0).Take(3);
-            cloneQueryDesigner.Skip(2).Take(4);
+            queryDesinger = queryDesinger.Skip(0).Take(3);
+            cloneQueryDesigner = cloneQueryDesigner.Skip(2).Take(4);
 
-            queryDesinger.Union(cloneQueryDesigner);
+            queryDesinger = queryDesinger.Union(cloneQueryDesigner);
 
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
@@ -702,14 +706,14 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // make join Product table with Category filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger = queryDesinger.Join(root, conditionList);
 
             QueryDesinger cloneQueryDesigner = (QueryDesinger)queryDesinger.Clone();
 
-            queryDesinger.Skip(0).Take(3);
-            cloneQueryDesigner.Skip(2).Take(4);
+            queryDesinger = queryDesinger.Skip(0).Take(3);
+            cloneQueryDesigner = cloneQueryDesigner.Skip(2).Take(4);
 
-            queryDesinger.Except(cloneQueryDesigner);
+            queryDesinger = queryDesinger.Except(cloneQueryDesigner);
 
             var list = new List<Product>(queryDesinger.Cast<Product>());
             Assert.AreEqual(resultRowCount, list.Count);
@@ -742,7 +746,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // make join Product table with Category filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger.Join(root, conditionList);
 
             object first = queryDesinger.First();
 
@@ -776,7 +780,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             // make join Product table with Category filtered by conditions 
             // and ordered by already created ordering
-            queryDesinger.AddJoins(root, conditionList);
+            queryDesinger.Join(root, conditionList);
 
             object first = queryDesinger.FirstOrDefault();
 
@@ -959,7 +963,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
             ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             PredicateAggregationCondition predicateAggregationCondition = new AnyCondition("Orders", conditions);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -972,7 +976,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             queryDesinger = new QueryDesinger(context, typeof(Customer));
             conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             predicateAggregationCondition = new AnyCondition("Orders", conditions, false);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -990,7 +994,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
             ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             PredicateAggregationCondition predicateAggregationCondition = new AllCondition("Orders", conditions);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -1003,7 +1007,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             queryDesinger = new QueryDesinger(context, typeof(Customer));
             conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             predicateAggregationCondition = new AllCondition("Orders", conditions, false);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -1022,7 +1026,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
             ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             PredicateAggregationCondition predicateAggregationCondition = new CountCondition("Orders", conditions, firstCountValue, ConditionOperator.GreaterThan);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -1036,7 +1040,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             queryDesinger = new QueryDesinger(context, typeof(Customer));
             conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             predicateAggregationCondition = new CountCondition("Orders", conditions, secondCountValue, ConditionOperator.LessThanOrEqualTo);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -1055,7 +1059,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
             ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             PredicateAggregationCondition predicateAggregationCondition = new CountCondition("Orders", conditions, firstCountValue, ConditionOperator.GreaterThan);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -1069,7 +1073,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             queryDesinger = new QueryDesinger(context, typeof(Customer));
             conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             predicateAggregationCondition = new CountCondition("Orders", conditions, secondCountValue, ConditionOperator.LessThanOrEqualTo);
-            queryDesinger.AddConditions(predicateAggregationCondition);
+            queryDesinger = queryDesinger.Where(predicateAggregationCondition);
 
             customers = queryDesinger.Cast<Customer>().ToList();
 
@@ -1085,7 +1089,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 
             QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Order));
             ConditionList conditions = new ConditionList(new Condition("OrderDate.Value.DayOfWeek", DayOfWeek.Monday));
-            queryDesinger.AddConditions(conditions);
+            queryDesinger = queryDesinger.Where(conditions);
 
             var resultCount = queryDesinger.Count();
 

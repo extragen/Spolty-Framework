@@ -8,9 +8,9 @@ using Spolty.Framework.Checkers;
 using Spolty.Framework.ExpressionMakers.Linq;
 using Spolty.Framework.Helpers;
 
-namespace Spolty.Framework.Designers
+namespace Spolty.Framework.EnumeratorProviders
 {
-    public class DefaultEnumeratorProvider : IEnumeratorProvider
+    internal class DefaultEnumeratorProvider : IEnumeratorProvider
     {
         public DefaultEnumeratorProvider(Type entityType, IQueryProvider provider, Expression expression)
         {

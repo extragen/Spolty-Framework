@@ -4,8 +4,7 @@ using System.Data.Objects;
 using System.Linq;
 using System.Linq.Expressions;
 using Spolty.Framework.Checkers;
-using Spolty.Framework.Designers;
-using Spolty.Framework.ExpressionMakers.EntityFramework;
+using Spolty.Framework.EnumeratorProviders;
 using Spolty.Framework.ExpressionMakers.Linq;
 
 namespace Spolty.Framework.ExpressionMakers.Factories
@@ -31,7 +30,7 @@ namespace Spolty.Framework.ExpressionMakers.Factories
 
         public IJoinExpressionMaker CreateJoinExpressionMaker()
         {
-            return new EFJoinMaker(this);
+            return new JoinExpressionMaker(this);
         }
 
         public IOrderingExpressionMaker CreateOrderingExpressionMaker()
@@ -44,7 +43,7 @@ namespace Spolty.Framework.ExpressionMakers.Factories
             return new ConditionExpressionMaker(this);
         }
 
-        public IExpressionMaker CreateExpressionMaker()
+        public ISimpleExpressionMaker CreateSimpleExpressionMaker()
         {
             return new ExpressionMaker(this);
         }

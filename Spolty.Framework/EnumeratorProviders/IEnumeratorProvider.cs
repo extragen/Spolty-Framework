@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace Spolty.Framework.Designers
+namespace Spolty.Framework.EnumeratorProviders
 {
     public interface IEnumeratorProvider
     {

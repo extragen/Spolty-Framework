@@ -8,9 +8,9 @@ using Spolty.Framework.Checkers;
 using Spolty.Framework.ExpressionMakers.Linq;
 using Spolty.Framework.Helpers;
 
-namespace Spolty.Framework.Designers
+namespace Spolty.Framework.EnumeratorProviders
 {
-    public class LinqEnumeratorProvider : IEnumeratorProvider
+    internal class LinqEnumeratorProvider : IEnumeratorProvider
     {
         private const string DynamicString = "Dynamic";
         private readonly MethodInfo _method;

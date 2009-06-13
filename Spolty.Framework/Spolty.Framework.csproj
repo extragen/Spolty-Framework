@@ -12,8 +12,8 @@
     <AssemblyName>Spolty.Framework</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>spolty.pfx</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>spolty.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,6 +32,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <DocumentationFile>bin\Release\Spolty.Framework.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -62,13 +64,10 @@
     <Compile Include="ConfigurationSections\FactoryConfiguration.cs" />
     <Compile Include="ConfigurationSections\FactoryConfigurationCollection.cs" />
     <Compile Include="ConfigurationSections\SpoltyFrameworkSectionHandler.cs" />
-    <Compile Include="Designers\DefaultEnumeratorProvider.cs" />
-    <Compile Include="Designers\IEnumeratorProvider.cs" />
-    <Compile Include="Designers\LinqEnumeratorProvider.cs" />
+    <Compile Include="EnumeratorProviders\DefaultEnumeratorProvider.cs" />
+    <Compile Include="EnumeratorProviders\IEnumeratorProvider.cs" />
+    <Compile Include="EnumeratorProviders\LinqEnumeratorProvider.cs" />
     <Compile Include="DynamicQueryable.cs" />
-    <Compile Include="ExpressionMakers\EntityFramework\EFJoinMaker.cs" />
-    <Compile Include="ExpressionMakers\EntityFramework\PredicateConstants.cs" />
-    <Compile Include="ExpressionMakers\EntityFramework\PredicateMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ConditionExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\ExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Factories\EntityFrameworkExpressionMakerFactory.cs" />
@@ -78,18 +77,24 @@
     <Compile Include="ExpressionMakers\Linq\JoinExpressionMaker.cs" />
     <Compile Include="ExpressionMakers\Linq\MethodName.cs" />
     <Compile Include="ExpressionMakers\Linq\OrderingExpressionMaker.cs" />
+    <Compile Include="Helpers\ExpressionHelper.cs" />
+    <Compile Include="Parameters\Conditionals\Enums\AggregationMethod.cs" />
     <Compile Include="Parameters\Conditionals\AndCondition.cs" />
     <Compile Include="Parameters\Conditionals\AllCondition.cs" />
+    <Compile Include="Parameters\Conditionals\AnyCondition.cs" />
+    <Compile Include="Parameters\Conditionals\BaseAggregationCondition.cs" />
     <Compile Include="Parameters\Conditionals\BaseCondition.cs" />
     <Compile Include="Parameters\Conditionals\BiCondition.cs" />
     <Compile Include="Parameters\Conditionals\BoolCondition.cs" />
     <Compile Include="Parameters\Conditionals\Condition.cs" />
     <Compile Include="Parameters\Conditionals\ConditionList.cs" />
+    <Compile Include="Parameters\Conditionals\CountCondition.cs" />
     <Compile Include="Parameters\Conditionals\Enums\ConditionOperator.cs" />
     <Compile Include="Parameters\Conditionals\FieldCondition.cs" />
     <Compile Include="Parameters\Conditionals\ListWrapperHelper.cs" />
     <Compile Include="Parameters\Conditionals\OrCondition.cs" />
     <Compile Include="Exceptions\SpoltyException.cs" />
+    <Compile Include="Parameters\Conditionals\PredicateAggregationCondition.cs" />
     <Compile Include="Parameters\IParameterMarker.cs" />
     <Compile Include="Parameters\BaseNode\BaseNode.cs" />
     <Compile Include="Parameters\BaseNode\BaseNodeList.cs" />
@@ -105,7 +110,7 @@
     <Compile Include="Designers\QueryDesinger.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="spolty.pfx" />
+    <None Include="spolty.snk" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

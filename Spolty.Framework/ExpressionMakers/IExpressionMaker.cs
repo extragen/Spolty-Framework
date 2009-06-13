@@ -11,6 +11,10 @@ namespace Spolty.Framework.ExpressionMakers
     public interface IExpressionMaker
     {
         IExpressionMakerFactory Factory { get; }
+    }
+
+    public interface ISimpleExpressionMaker : IExpressionMaker
+    {
         Expression MakeDistinct(Expression sourceExpression);
         Expression MakeCount(Expression sourceExpression, Expression conditionExpression);
         Expression MakeAny(Expression sourceExpression, Expression conditionExpression);

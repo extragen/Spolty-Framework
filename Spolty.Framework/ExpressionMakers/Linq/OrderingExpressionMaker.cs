@@ -4,16 +4,25 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Spolty.Framework.Checkers;
 using Spolty.Framework.ExpressionMakers.Factories;
+using Spolty.Framework.Helpers;
 using Spolty.Framework.Parameters.Orderings;
 using Spolty.Framework.Parameters.Orderings.Enums;
 
 namespace Spolty.Framework.ExpressionMakers.Linq
 {
-    internal class OrderingExpressionMaker : ExpressionMaker, IOrderingExpressionMaker
+    internal class OrderingExpressionMaker : IOrderingExpressionMaker
     {
-        public OrderingExpressionMaker(IExpressionMakerFactory factory)
-            : base(factory)
+        private readonly IExpressionMakerFactory _factory;
+
+        public IExpressionMakerFactory Factory
         {
+            get { return _factory; }
+        }
+
+
+        public OrderingExpressionMaker(IExpressionMakerFactory factory)
+        {
+            _factory = factory;
         }
 
         #region IOrderingExpressionMaker Members
@@ -29,13 +38,13 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 var alredyOrdered = new List<Type>();
                 for (int i = 0; i < orderingList.Count; i++)
                 {
-                    Type sourceType = GetGenericType(source);
+                    Type sourceType = ExpressionHelper.GetGenericType(source);
                     Ordering ordering = orderingList[i];
                     string propertyName = ordering.ColumnName;
                     Type elementType = ordering.ElementType ?? sourceType;
 
                     PropertyInfo property;
-                    ParameterExpression sourceParameter = CreateOrGetParameterExpression(sourceType, sourceType.Name);
+                    ParameterExpression sourceParameter = ExpressionHelper.CreateOrGetParameterExpression(sourceType, sourceType.Name, Factory.Store);
                     MemberExpression propertyExpression = null;
                     if (elementType != sourceType)
                     {
@@ -75,8 +84,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                         }
 
                         source = ordering.SortDirection == SortDirection.Ascending
-                                     ? CallQueryableMethod(orderByMethod, typeArguments, source, orderingExpression)
-                                     : CallQueryableMethod(orderByDescendingMethod, typeArguments, source,
+                                     ? ExpressionHelper.CallQueryableMethod(orderByMethod, typeArguments, source, orderingExpression)
+                                     : ExpressionHelper.CallQueryableMethod(orderByDescendingMethod, typeArguments, source,
                                                            orderingExpression);
                     }
                 }
@@ -85,5 +94,16 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         }
 
         #endregion
+
+        internal static LambdaExpression CreateLambdaExpression(Type sourceType, string includingMember,
+                                                     ParameterExpression parameter, MemberExpression member)
+        {
+            Expression memberExpression = member == null
+                                              ? ExpressionHelper.CreateMemberExpression(sourceType, includingMember, parameter)
+                                              : ExpressionHelper.CreateMemberExpression(ReflectionHelper.GetMemberType(member.Member),
+                                                                       includingMember, member);
+            return Expression.Lambda(memberExpression, parameter);
+        }
+
     }
 }

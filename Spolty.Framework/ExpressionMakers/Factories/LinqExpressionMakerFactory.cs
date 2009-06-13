@@ -4,7 +4,7 @@ using System.Data.Linq;
 using System.Linq;
 using System.Linq.Expressions;
 using Spolty.Framework.Checkers;
-using Spolty.Framework.Designers;
+using Spolty.Framework.EnumeratorProviders;
 using Spolty.Framework.ExpressionMakers.Linq;
 
 namespace Spolty.Framework.ExpressionMakers.Factories
@@ -46,7 +46,7 @@ namespace Spolty.Framework.ExpressionMakers.Factories
             return new ConditionExpressionMaker(this);
         }
 
-        public IExpressionMaker CreateExpressionMaker()
+        public ISimpleExpressionMaker CreateSimpleExpressionMaker()
         {
             return new ExpressionMaker(this);
         }

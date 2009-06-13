@@ -11,7 +11,6 @@ using Spolty.Framework.ExpressionMakers;
 using Spolty.Framework.ExpressionMakers.Factories;
 using Spolty.Framework.Helpers;
 using Spolty.Framework.Parameters;
-using Spolty.Framework.Parameters.BaseNode;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Joins;
 using Spolty.Framework.Parameters.Orderings;
@@ -80,6 +79,15 @@ namespace Spolty.Framework.Designers
 
         #region Constructors
 
+        private QueryDesinger(object context, Type elementType, IQueryProvider provider, Expression expression, IExpressionMakerFactory factory)
+        {
+            _context = context;
+            ElementType = elementType;
+            Provider = provider;
+            Expression = expression;
+            _expressionMakerFactory = factory;
+        }
+
         /// <summary>
         /// Creates <see cref="QueryDesinger"/> by <see cref="JoinNode"/> tree. 
         /// </summary>
@@ -96,7 +104,8 @@ namespace Spolty.Framework.Designers
             ElementType = root.EntityType;
 
             InitializeQueryable();
-            AddJoins(root, parameters);
+            QueryDesinger queryDesinger = Join(root, parameters);
+            _expression = queryDesinger.Expression;
         }
 
         /// <summary>
@@ -142,18 +151,18 @@ namespace Spolty.Framework.Designers
         /// Adds to current <see cref="QueryDesinger"/> additional conditions.
         /// </summary>
         /// <param name="conditions">additional conditions.</param>
-        /// <returns>Current <see cref="QueryDesinger"/> that filtered by conditions. </returns>
-        public QueryDesinger AddConditions(params BaseCondition[] conditions)
+        /// <returns>A <see cref="QueryDesinger"/> that filtered by conditions. </returns>
+        public QueryDesinger Where(params BaseCondition[] conditions)
         {
-            return AddConditions(conditions as IEnumerable<BaseCondition>);
+            return Where(conditions as IEnumerable<BaseCondition>);
         }
 
         /// <summary>
         /// Adds to current <see cref="QueryDesinger"/> additional conditions.
         /// </summary>
         /// <param name="conditions">additional conditions. </param>
-        /// <returns>Current <see cref="QueryDesinger"/> that filtered by conditions. </returns>
-        public QueryDesinger AddConditions(IEnumerable<BaseCondition> conditions)
+        /// <returns>A <see cref="QueryDesinger"/> that filtered by conditions. </returns>
+        public QueryDesinger Where(IEnumerable<BaseCondition> conditions)
         {
             if (conditions == null)
             {
@@ -168,9 +177,9 @@ namespace Spolty.Framework.Designers
 
             conditionList.RemoveDuplicates();
 
-            _expression = _expressionMakerFactory.CreateConditionExpressionMaker().Make(conditions, _expression);
+            Expression expression = _expressionMakerFactory.CreateConditionExpressionMaker().Make(conditions, _expression);
 
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory);
         }
 
         #endregion
@@ -180,21 +189,21 @@ namespace Spolty.Framework.Designers
         /// <summary>
         /// Adds orderings to <see cref="QueryDesinger"/>. Orderings apply only for current EntityType. 
         /// </summary>
-        /// <remarks>If you want apply orderings to joined types you should use AddJoins method with defined <see cref="OrderingList"/> parameter.</remarks>
+        /// <remarks>If you want apply orderings to joined types you should use Join method with defined <see cref="OrderingList"/> parameter.</remarks>
         /// <param name="orderings"></param>
-        /// <returns>Current <see cref="QueryDesinger"/> that contains orderings.</returns>
-        public QueryDesinger AddOrderings(params Ordering[] orderings)
+        /// <returns>A <see cref="QueryDesinger"/> that contains orderings.</returns>
+        public QueryDesinger OrderBy(params Ordering[] orderings)
         {
-            return AddOrderings(orderings as IEnumerable<Ordering>);
+            return OrderBy(orderings as IEnumerable<Ordering>);
         }
 
         /// <summary>
         /// Adds orderings to <see cref="QueryDesinger"/>. Orderings apply only for current EntityType. 
         /// </summary>
-        /// <remarks>If you want apply orderings to joined types you should use AddJoins method with defined <see cref="OrderingList"/> parameter.</remarks>
+        /// <remarks>If you want apply orderings to joined types you should use Join method with defined <see cref="OrderingList"/> parameter.</remarks>
         /// <param name="orderings"></param>
-        /// <returns>Current <see cref="QueryDesinger"/> that contains orderings.</returns>
-        public QueryDesinger AddOrderings(IEnumerable<Ordering> orderings)
+        /// <returns>A <see cref="QueryDesinger"/> that contains orderings.</returns>
+        public QueryDesinger OrderBy(IEnumerable<Ordering> orderings)
         {
             if (orderings == null)
             {
@@ -209,9 +218,9 @@ namespace Spolty.Framework.Designers
 
             orderingList.RemoveDuplicates();
 
-            _expression = _expressionMakerFactory.CreateOrderingExpressionMaker().Make(orderings, _expression);
+            Expression expression = _expressionMakerFactory.CreateOrderingExpressionMaker().Make(orderings, _expression);
 
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory);
         }
 
         #endregion
@@ -221,15 +230,15 @@ namespace Spolty.Framework.Designers
         /// First sequence it's current <see cref="QueryDesinger"/>, second it's passing parameter <see cref="IQueryable"/> . 
         /// </summary>
         /// <param name="exceptQueryable">An <see cref="IQueryable"/> whose elements that also occur in the first sequence will not appear in the returned sequence. </param>
-        /// <returns>The <see cref="QueryDesinger"/> that contains the set difference of the two sequences. </returns>
+        /// <returns>A <see cref="QueryDesinger"/> that contains the set difference of the two sequences. </returns>
         public QueryDesinger Except(IQueryable exceptQueryable)
         {
             Checker.CheckArgumentNull(exceptQueryable, "exceptQueryable");
 
-            _expression = _expressionMakerFactory.CreateExpressionMaker().MakeExcept(_expression,
+            Expression expression = _expressionMakerFactory.CreateSimpleExpressionMaker().MakeExcept(_expression,
                                                                                      exceptQueryable.Expression);
 
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory);
         }
 
         /// <summary>
@@ -237,12 +246,12 @@ namespace Spolty.Framework.Designers
         /// First sequence is current <see cref="QueryDesinger"/>.
         /// </summary>
         /// <param name="unionQueryable">A sequence whose distinct elements form the second set for the union operation. </param>
-        /// <returns>The <see cref="QueryDesinger"/> that contains the elements from both input sequences, excluding duplicates. </returns>
+        /// <returns>A <see cref="QueryDesinger"/> that contains the elements from both input sequences, excluding duplicates. </returns>
         public QueryDesinger Union(IQueryable unionQueryable)
         {
             Checker.CheckArgumentNull(unionQueryable, "unionQueryable");
 
-            _expression = _expressionMakerFactory.CreateExpressionMaker().MakeUnion(_expression,
+            _expression = _expressionMakerFactory.CreateSimpleExpressionMaker().MakeUnion(_expression,
                                                                                     unionQueryable.Expression);
 
             return this;
@@ -255,49 +264,8 @@ namespace Spolty.Framework.Designers
         /// <param name="parameteres">additional parameters <see cref="IParameterMarker"/> use for creation 
         /// additional condition <see cref="ConditionList"/> and/or ordering <see cref="OrderingList"/>. 
         /// Orderings in this case could be assigned to joins nodes.</param>
-        /// <returns>The <see cref="QueryDesinger"/> which has joins with other Entity filtered and ordered by passed parameteres.</returns>
-        /// <example>
-        /// // create QueryDesigner with ElementType == Product
-        /// var queryDesinger = new QueryDesinger(context, typeof(Product));
-        ///
-        /// //create root node which elementType has the same type in queryDesigner
-        /// var root = new JoinNode(typeof (Product));
-        ///
-        /// // create child node Category with propertyName "Products". 
-        /// // Because Category linked with Product by next property:
-        /// // public EntitySet{Product} Products 
-        /// var categoryNode = new JoinNode(typeof (Category), "Products");
-        /// 
-        /// // add categoryNode to root node
-        /// root.AddChildren(categoryNode);
-        ///
-        /// // create ordering by Product.ProductName ASC
-        /// var orderByProductName = new Ordering("ProductName");
-        /// // create ordering by Category.CategoryName DESC
-        /// var orderByCategoryName = new Ordering("CategoryName", SortDirection.Descending, typeof (Category));
-        /// 
-        /// // create ordering list with already created orderings
-        /// var orderingList = new OrderingList(orderByProductName, orderByCategoryName);
-        ///
-        /// // create filter by Product.ProductName like "%l%"
-        /// var productNameCondition = new Condition("ProductName", "l", ConditionOperator.Like);
-        /// // create filter by Category.Description like "Sweet%"
-        /// var categoryNameCondition = new Condition("Description", "Sweet", ConditionOperator.StartsWith, typeof(Category));
-        ///
-        /// // create condition list with already created conditions
-        /// var conditionList = new ConditionList(productNameCondition, categoryNameCondition);
-        /// 
-        /// // make join Product table with Category filtered by conditions 
-        /// // and ordered by already created ordering
-        /// queryDesinger.AddJoins(root, conditionList, orderingList);
-        /// 
-        /// // get results 
-        /// foreach (Product product in queryDesinger)
-        /// {
-        ///     Console.WriteLine(product.ProductID + " " + product.ProductName);
-        /// }
-        /// </example>
-        public QueryDesinger AddJoins(JoinNode rootNode, params IParameterMarker[] parameteres)
+        /// <returns>A <see cref="QueryDesinger"/> which has joins with other Entity filtered and ordered by passed parameteres.</returns>
+        public QueryDesinger Join(JoinNode rootNode, params IParameterMarker[] parameteres)
         {
             Checker.CheckArgumentNull(rootNode, "rootNode");
 
@@ -311,16 +279,23 @@ namespace Spolty.Framework.Designers
 
             ParametersParser.Parse(out conditions, out orderings, parameteres);
 
-            AddConditions(rootNode.Conditions);
+            QueryDesinger queryDesinger = Where(rootNode.Conditions);
 
-            _expression = AddChildren(_expression, rootNode, conditions, orderings);
+            IJoinExpressionMaker maker = _expressionMakerFactory.CreateJoinExpressionMaker();
+            Expression expression = maker.Make(queryDesinger.Expression, rootNode, conditions, orderings);
 
-            AddConditions(conditions);
-            AddOrderings(orderings.Where(order => order.ElementType == null || order.ElementType == ElementType));
-
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory)
+                .Where(conditions)
+                .OrderBy(orderings
+                             .Where(order => order.ElementType == null || order.ElementType == ElementType));
         }
 
+        /// <summary>
+        /// Converts the elements of an IQueryable to the specified type. 
+        /// </summary>
+        /// <remarks>Current method execute query if you made left outer join by using <see cref="QueryDesinger"/>.</remarks>
+        /// <typeparam name="TResult">The type to convert the elements of source to. </typeparam>
+        /// <returns>An <see cref="IQueryable{T}"/> that contains each element of the source sequence converted to the specified type. </returns>
         public IQueryable<TResult> Cast<TResult>()
         {
             if (ElementType == ReflectionHelper.GetGenericType(_expression.Type))
@@ -342,36 +317,28 @@ namespace Spolty.Framework.Designers
             return _expression.ToString();
         }
 
-        #region Skip, Take, Distinct
-
         /// <summary>
         /// Bypasses a specified number of elements in a sequence and then returns the remaining elements. 
         /// </summary>
         /// <param name="count">The number of elements to skip before returning the remaining elements. </param>
-        /// <returns>Current <see cref="QueryDesinger"/> that contains elements that occur after the specified index in the input sequence. </returns>
+        /// <returns>A <see cref="QueryDesinger"/> that contains elements that occur after the specified index in the input sequence. </returns>
         public QueryDesinger Skip(int count)
         {
-            if (count > 0)
-            {
-                _expression = _expressionMakerFactory.CreateExpressionMaker().MakeSkip(count, _expression);
-            }
+            Expression expression = _expressionMakerFactory.CreateSimpleExpressionMaker().MakeSkip(count, _expression);
 
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory);
         }
 
         /// <summary>
         /// Returns a specified number of contiguous elements from the start of a sequence.
         /// </summary>
         /// <param name="count">The number of elements to return. </param>
-        /// <returns>Current <see cref="QueryDesinger"/> that contains the specified number of elements from the start of source. </returns>
+        /// <returns>A <see cref="QueryDesinger"/> that contains the specified number of elements from the start of source. </returns>
         public QueryDesinger Take(int count)
         {
-            if (count > 0)
-            {
-                _expression = _expressionMakerFactory.CreateExpressionMaker().MakeTake(count, _expression);
-            }
+            Expression expression = _expressionMakerFactory.CreateSimpleExpressionMaker().MakeTake(count, _expression);
 
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory);
         }
 
         /// <summary>
@@ -380,16 +347,20 @@ namespace Spolty.Framework.Designers
         /// <returns>Returns distinct elements from a sequence by using the default equality comparer to compare values.</returns>
         public QueryDesinger Distinct()
         {
-            _expression = _expressionMakerFactory.CreateExpressionMaker().MakeDistinct(_expression);
+            Expression expression = _expressionMakerFactory.CreateSimpleExpressionMaker().MakeDistinct(_expression);
 
-            return this;
+            return new QueryDesinger(_context, ElementType, Provider, expression, _expressionMakerFactory);
         }
 
+        /// <summary>
+        /// Returns the number of elements in a sequence. 
+        /// </summary>
+        /// <returns>The number of elements in the input sequence. </returns>
         public int Count()
         {
             var copy = (QueryDesinger) Clone();
 
-            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeCount(copy._expression, null);
+            copy._expression = copy._expressionMakerFactory.CreateSimpleExpressionMaker().MakeCount(copy._expression, null);
 
             return (int) copy.Provider.Execute(copy._expression);
         }
@@ -402,7 +373,7 @@ namespace Spolty.Framework.Designers
         {
             var copy = (QueryDesinger) Clone();
 
-            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeAny(copy._expression, null);
+            copy._expression = copy._expressionMakerFactory.CreateSimpleExpressionMaker().MakeAny(copy._expression, null);
 
             return (bool) copy.Provider.Execute(copy._expression);
         }
@@ -415,7 +386,7 @@ namespace Spolty.Framework.Designers
         {
             var copy = (QueryDesinger) Clone();
 
-            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeFirst(copy._expression);
+            copy._expression = copy._expressionMakerFactory.CreateSimpleExpressionMaker().MakeFirst(copy._expression);
 
             return copy.Provider.Execute(copy._expression);
         }
@@ -428,12 +399,10 @@ namespace Spolty.Framework.Designers
         {
             var copy = (QueryDesinger) Clone();
 
-            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeFirstOrDefault(copy._expression);
+            copy._expression = copy._expressionMakerFactory.CreateSimpleExpressionMaker().MakeFirstOrDefault(copy._expression);
 
             return copy.Provider.Execute(copy._expression);
         }
-
-        #endregion
 
         #region Private methods
 
@@ -457,13 +426,6 @@ namespace Spolty.Framework.Designers
             return
                 SpoltyActivator.CreateInstance<IExpressionMakerFactory>(
                     collection.UseFactory.Type, new[] {_context});
-        }
-
-        private Expression AddChildren(Expression rootExpression, JoinNode node, params IParameterMarker[] parameters)
-        {
-            IJoinExpressionMaker maker = _expressionMakerFactory.CreateJoinExpressionMaker();
-            Expression newExpression = maker.Make(rootExpression, node, parameters);
-            return newExpression;
         }
 
         #endregion

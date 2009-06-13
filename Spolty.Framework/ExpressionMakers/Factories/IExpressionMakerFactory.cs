@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using Spolty.Framework.Designers;
+using Spolty.Framework.EnumeratorProviders;
 
 namespace Spolty.Framework.ExpressionMakers.Factories
 {
@@ -10,7 +10,7 @@ namespace Spolty.Framework.ExpressionMakers.Factories
     {
         object CurrentContext { get; }
         Dictionary<string, object> Store { get; }  
-        IExpressionMaker CreateExpressionMaker();
+        ISimpleExpressionMaker CreateSimpleExpressionMaker();
         IJoinExpressionMaker CreateJoinExpressionMaker();
         IOrderingExpressionMaker CreateOrderingExpressionMaker();
         IConditionExpressionMaker CreateConditionExpressionMaker();

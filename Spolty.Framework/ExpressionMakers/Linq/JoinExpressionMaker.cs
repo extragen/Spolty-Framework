@@ -21,64 +21,19 @@ using Spolty.Framework.Parsers;
 
 namespace Spolty.Framework.ExpressionMakers.Linq
 {
-    internal class JoinExpressionMaker : ExpressionMaker, IJoinExpressionMaker
+    internal class JoinExpressionMaker : IJoinExpressionMaker
     {
-        public JoinExpressionMaker(IExpressionMakerFactory factory) : base(factory)
+        private readonly IExpressionMakerFactory _factory;
+
+        public IExpressionMakerFactory Factory
         {
+            get { return _factory; }
         }
 
-        #region Group Join Expresion Maker
-
-        protected Expression MakeGroupJoinExpression(Expression outerSourceExpression,
-                                                     Expression innerSourceExpression, Type unitingType,
-                                                     JoinNode childNode)
+        public JoinExpressionMaker(IExpressionMakerFactory factory) 
         {
-            Type outerType = GetGenericType(outerSourceExpression);
-            Type innerType = GetGenericType(innerSourceExpression);
-
-            LambdaExpression outerKeySelector;
-            LambdaExpression innerKeySelector;
-
-            if (childNode.IsTypeNameEqualAssociatedPropertyName)
-            {
-                GetSelectorKeys(outerType, innerType, out outerKeySelector,
-                                out innerKeySelector);
-            }
-            else
-            {
-                GetSelectorKeys(outerType, innerType, childNode.AssociatedPropertyName, out outerKeySelector,
-                                out innerKeySelector);
-            }
-            Type innerParam1Type = GenericIEnumerableType.MakeGenericType(new[] {innerType});
-
-            ParameterExpression innerParam1 =
-                CreateOrGetParameterExpression(GenericIEnumerableType.MakeGenericType(new[] {innerType}), innerType.Name);
-            ParameterExpression innerParam2 = CreateOrGetParameterExpression(outerType, outerType.Name);
-
-            var innerProperty = new DynamicProperty(innerType.Name, innerParam1Type);
-            var outerProperty = new DynamicProperty(outerType.Name, outerType);
-
-            Type dynamicClassType = DynamicExpression.CreateClass(innerProperty, outerProperty);
-
-            var bindings = new MemberBinding[2];
-            bindings[0] = Expression.Bind(dynamicClassType.GetProperty(innerType.Name), innerParam1);
-            bindings[1] = Expression.Bind(dynamicClassType.GetProperty(outerType.Name), innerParam2);
-
-            Expression newExpression = Expression.MemberInit(Expression.New(dynamicClassType), bindings);
-            LambdaExpression resultSelector = Expression.Lambda(newExpression, innerParam2, innerParam1);
-
-            var typeArguments = new[] {outerType, innerType, outerKeySelector.Body.Type, resultSelector.Body.Type};
-
-            Expression groupJoinExpression = CallQueryableMethod(MethodName.GroupJoin, typeArguments,
-                                                                 outerSourceExpression,
-                                                                 innerSourceExpression,
-                                                                 Expression.Quote(outerKeySelector),
-                                                                 Expression.Quote(innerKeySelector),
-                                                                 Expression.Quote(resultSelector));
-            return groupJoinExpression;
+            _factory = factory;
         }
-
-        #endregion
 
         #region Gets Selector Keys Methods
 
@@ -86,8 +41,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                                      out LambdaExpression outerKeySelector,
                                      out LambdaExpression innerKeySelector)
         {
-            ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
-            ParameterExpression innerParam = CreateOrGetParameterExpression(innerType, innerType.Name);
+            ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
+            ParameterExpression innerParam = ExpressionHelper.CreateOrGetParameterExpression(innerType, innerType.Name, Factory.Store);
 
             object context = Factory.CurrentContext;
 
@@ -107,10 +62,10 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             MemberInfo mi = association.ThisMember.Member;
 
             Type memberType = ReflectionHelper.GetMemberType(mi);
-            if (IEnumerableType.IsAssignableFrom(memberType))
+            if (ExpressionHelper.IEnumerableType.IsAssignableFrom(memberType))
             {
                 outerKeySelector = Expression.Lambda(outerParam, outerParam);
-                Expression propertyExpreesion = CreateMemberExpression(innerType, outerParam.Name, innerParam);
+                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(innerType, outerParam.Name, innerParam);
                 innerKeySelector = Expression.Lambda(propertyExpreesion, innerParam);
             }
             else
@@ -139,8 +94,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                                      out LambdaExpression outerKeySelector,
                                      out LambdaExpression innerKeySelector)
         {
-            ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
-            ParameterExpression innerParam = CreateOrGetParameterExpression(innerType, innerType.Name);
+            ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
+            ParameterExpression innerParam = ExpressionHelper.CreateOrGetParameterExpression(innerType, innerType.Name, Factory.Store);
 
             PropertyInfo pi = outerType.GetProperty(innerType.Name);
             if (pi == null)
@@ -148,15 +103,15 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException(String.Format("Property:{0} not found", innerType.Name));
             }
 
-            if (IEnumerableType.IsAssignableFrom(pi.PropertyType))
+            if (ExpressionHelper.IEnumerableType.IsAssignableFrom(pi.PropertyType))
             {
                 outerKeySelector = Expression.Lambda(outerParam, outerParam);
-                Expression propertyExpreesion = CreateMemberExpression(innerType, outerProperty, innerParam);
+                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(innerType, outerProperty, innerParam);
                 innerKeySelector = Expression.Lambda(propertyExpreesion, innerParam);
             }
             else
             {
-                Expression propertyExpreesion = CreateMemberExpression(outerType, innerType.Name, outerParam);
+                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(outerType, innerType.Name, outerParam);
                 outerKeySelector = Expression.Lambda(propertyExpreesion, outerParam);
                 innerKeySelector = Expression.Lambda(innerParam, innerParam);
             }
@@ -166,71 +121,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         #region Left Join Makers Method
 
-        protected virtual Expression MakeLeftJoin(Expression outerSourceExpression,
-                                                  Expression innerSourceExpression, Type unitingTyped,
-                                                  Type resultSelectorType, JoinNode childNode)
-        {
-            Expression groupJoinExpression =
-                MakeGroupJoinExpression(outerSourceExpression, innerSourceExpression, unitingTyped, childNode);
-
-            Type outerType = GetGenericType(outerSourceExpression);
-            Type innerType = GetGenericType(innerSourceExpression);
-
-            Type groupJoinBodyType = GetGenericType(groupJoinExpression);
-            ParameterExpression dynParam1 = CreateOrGetParameterExpression(groupJoinBodyType, groupJoinBodyType.Name);
-
-            PropertyInfo innerPropertyInfo = groupJoinBodyType.GetProperty(innerType.Name);
-            ParameterExpression joinParam = CreateOrGetParameterExpression(innerType, innerType.Name);
-
-            MemberExpression innerMemberEx = Expression.Property(dynParam1, innerPropertyInfo);
-            MemberExpression outerMemberEx = Expression.Property(dynParam1, outerType.Name);
-
-            Expression tempJoinExpression = CallEnumerableMethod(MethodName.DefaultIfEmpty, new[] { innerType }, innerMemberEx);
-
-            var outerProperty = new DynamicProperty(outerType.Name, outerType);
-            var innerProperty = new DynamicProperty(innerType.Name, innerType);
-
-            Type dynamicClassType2 = DynamicExpression.CreateClass(outerProperty, innerProperty);
-
-            var bindings = new MemberBinding[2];
-            bindings[0] = Expression.Bind(dynamicClassType2.GetProperty(outerType.Name), outerMemberEx);
-            bindings[1] = Expression.Bind(dynamicClassType2.GetProperty(innerType.Name), joinParam);
-
-            Expression newExpression = Expression.MemberInit(Expression.New(dynamicClassType2), bindings);
-            LambdaExpression resultSelector = Expression.Lambda(newExpression, joinParam);
-
-            tempJoinExpression = CallEnumerableMethod(MethodName.Select, new[] { innerType, resultSelector.Body.Type },
-                                                      tempJoinExpression, resultSelector);
-
-            LambdaExpression arguments = Expression.Lambda(tempJoinExpression, dynParam1);
-            tempJoinExpression = CallQueryableMethod(MethodName.SelectMany, new[] { groupJoinBodyType, dynamicClassType2 },
-                                                     groupJoinExpression, arguments);
-
-            ParameterExpression dynParam2 = CreateOrGetParameterExpression(dynamicClassType2, dynamicClassType2.Name);
-
-            resultSelector = Expression.Lambda(outerMemberEx, dynParam2);
-
-            Expression leftJoinExpression = CallQueryableMethod(MethodName.Select,
-                                                                new[]
-                                                                    {
-                                                                        GetGenericType(tempJoinExpression),
-                                                                        resultSelector.Body.Type
-                                                                    }, tempJoinExpression,
-                                                                resultSelector);
-
-            if (childNode.Conditions != null && childNode.Conditions.Count > 0)
-            {
-                leftJoinExpression = Factory.CreateConditionExpressionMaker().Make(childNode.Conditions, leftJoinExpression);
-            }
-
-            return leftJoinExpression;
-        }
-
         internal Expression MakeLeftJoin(Expression outerSourceExpression, JoinNode rootNode, int startIndex)
         {
-            Type outerType = GetGenericType(outerSourceExpression);
+            Type outerType = ExpressionHelper.GetGenericType(outerSourceExpression);
 
-            ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
+            ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
             var dynamicProperties = new Dictionary<DynamicProperty, Expression>(rootNode.ChildNodes.Count - startIndex + 1);
             var outerProperty = new DynamicProperty(MethodName.MainProperty, outerType);
             dynamicProperties.Add(outerProperty, outerParam);
@@ -268,13 +163,13 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             LambdaExpression resultSelector = Expression.Lambda(newExpression, outerParam);
 
             Expression selectNewQueryableExpression = null;
-            if (outerSourceExpression.Type.GetInterface(IQueryableType.Name) != null)
+            if (outerSourceExpression.Type.GetInterface(ExpressionHelper.IQueryableType.Name) != null)
             {
-                selectNewQueryableExpression = CallQueryableMethod(MethodName.Select, new[] {outerType, resultSelector.Body.Type}, outerSourceExpression, Expression.Quote(resultSelector));
+                selectNewQueryableExpression = ExpressionHelper.CallQueryableMethod(MethodName.Select, new[] {outerType, resultSelector.Body.Type}, outerSourceExpression, Expression.Quote(resultSelector));
             }
-            else if (outerSourceExpression.Type.GetInterface(IEnumerableType.Name) != null)
+            else if (outerSourceExpression.Type.GetInterface(ExpressionHelper.IEnumerableType.Name) != null)
             {
-                selectNewQueryableExpression = CallEnumerableMethod(MethodName.Select, new[] {outerType, resultSelector.Body.Type}, outerSourceExpression, resultSelector);
+                selectNewQueryableExpression = ExpressionHelper.CallEnumerableMethod(MethodName.Select, new[] {outerType, resultSelector.Body.Type}, outerSourceExpression, resultSelector);
             }
            
             if (selectNewQueryableExpression == null)
@@ -285,8 +180,6 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return selectNewQueryableExpression;
         }
 
-//        internal Expression MakeLeftJoin(Type )
-
         #endregion
 
         #region Inner Join Makers Method
@@ -294,11 +187,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         internal Expression MakeInnerJoin(Expression outerSourceExpression, Expression innerSourceExpression,
                                           Type unitingType, Type resultSelectorType)
         {
-            Type outerType = GetGenericType(outerSourceExpression);
-            Type innerType = GetGenericType(innerSourceExpression);
+            Type outerType = ExpressionHelper.GetGenericType(outerSourceExpression);
+            Type innerType = ExpressionHelper.GetGenericType(innerSourceExpression);
 
-            ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
-            ParameterExpression innerParam = CreateOrGetParameterExpression(innerType, innerType.Name);
+            ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
+            ParameterExpression innerParam = ExpressionHelper.CreateOrGetParameterExpression(innerType, innerType.Name, Factory.Store);
 
             LambdaExpression outerKeySelector;
             LambdaExpression innerKeySelector;
@@ -317,11 +210,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         private Expression MakeInnerJoin(Expression outerSourceExpression, Expression innerSourceExpression,
                                          JoinNode childNode, Type resultSelectorType)
         {
-            Type outerType = GetGenericType(outerSourceExpression);
-            Type innerType = GetGenericType(innerSourceExpression);
+            Type outerType = ExpressionHelper.GetGenericType(outerSourceExpression);
+            Type innerType = ExpressionHelper.GetGenericType(innerSourceExpression);
 
-            ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
-            ParameterExpression innerParam = CreateOrGetParameterExpression(innerType, innerType.Name);
+            ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
+            ParameterExpression innerParam = ExpressionHelper.CreateOrGetParameterExpression(innerType, innerType.Name, Factory.Store);
 
             LambdaExpression outerKeySelector;
             LambdaExpression innerKeySelector;
@@ -367,10 +260,10 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 throw new SpoltyException("Number of fields mismatch");
             }
 
-            Type outerType = GetGenericType(outerExpression);
-            ParameterExpression outerParam = CreateOrGetParameterExpression(outerType, outerType.Name);
-            Type innerType = GetGenericType(innerExpression);
-            ParameterExpression innerParam = CreateOrGetParameterExpression(innerType, innerType.Name);
+            Type outerType = ExpressionHelper.GetGenericType(outerExpression);
+            ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
+            Type innerType = ExpressionHelper.GetGenericType(innerExpression);
+            ParameterExpression innerParam = ExpressionHelper.CreateOrGetParameterExpression(innerType, innerType.Name, Factory.Store);
 
             var clw = new ConditionList();
 
@@ -398,7 +291,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
             Type type = outerPropertyInfo.PropertyType;
             innerPropertyExpression =
-                ConvertOrCastInnerPropertyExpression(type, innerPropertyInfo, innerPropertyExpression);
+                ExpressionHelper.ConvertOrCastInnerPropertyExpression(type, innerPropertyInfo, innerPropertyExpression);
 
             LambdaExpression outerKeySelector = Expression.Lambda(outerPropertyExpression, outerParam);
             LambdaExpression innerKeySelector = Expression.Lambda(innerPropertyExpression, innerParam);
@@ -422,11 +315,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         {
             var typeArguments = new[]
                                     {
-                                        GetGenericType(outer), GetGenericType(inner),
+                                        ExpressionHelper.GetGenericType(outer), ExpressionHelper.GetGenericType(inner),
                                         outerKeySelector.Body.Type, resultSelector.Body.Type
                                     };
 
-            return CallQueryableMethod(MethodName.Join, typeArguments, outer, inner, Expression.Quote(outerKeySelector),
+            return ExpressionHelper.CallQueryableMethod(MethodName.Join, typeArguments, outer, inner, Expression.Quote(outerKeySelector),
                                        Expression.Quote(innerKeySelector), Expression.Quote(resultSelector));
         }
 
@@ -452,8 +345,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     if (childNode.ChildNodes.Count > 0)
                     {
                         var queryDesinger = new QueryDesinger(Factory.CurrentContext, childNode.EntityType);
-                        queryDesinger.AddConditions(conditions);
-                        queryDesinger.AddOrderings(orderings);
+                        queryDesinger = queryDesinger.Where(conditions).OrderBy(orderings);
 
                         Expression outerExpression = queryDesinger.Expression;
                         Expression childrenExpression = Make(outerExpression, childNode, conditions, orderings);
@@ -462,8 +354,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     else
                     {
                         var queryDesinger = new QueryDesinger(Factory.CurrentContext, childNode.EntityType);
-                        queryDesinger.AddConditions(childNode.Conditions);
-                        queryDesinger.AddOrderings(orderings);
+                        queryDesinger = queryDesinger.Where(childNode.Conditions).OrderBy(orderings);
 
                         newExpression = MakeInnerJoin(newExpression, queryDesinger.Expression, childNode);
                     }
@@ -490,7 +381,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             Checker.CheckArgumentNull(innerExpression, "innerExpression");
             Checker.CheckArgumentNull(childNode, "childNode");
 
-            Type resultType = GetGenericType(outerExpression);
+            Type resultType = ExpressionHelper.GetGenericType(outerExpression);
             if (childNode.ParentFieldsNames.Count > 0 && childNode.CurrentFieldsNames.Count > 0)
             {
                 var leftFields = new string[childNode.ParentFieldsNames.Count];
