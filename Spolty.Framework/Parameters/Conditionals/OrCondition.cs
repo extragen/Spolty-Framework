@@ -63,26 +63,7 @@ namespace Spolty.Framework.Parameters.Conditionals
         /// <param name="conditions"><see cref="IEnumerable{T}"/> of conditions.</param>
         public OrCondition(IEnumerable<BaseCondition> conditions)
         {
-            if (conditions == null)
-            {
-                throw new SpoltyException("conditions is incorrect");
-            }
-
-            foreach (BaseCondition condition in conditions)
-            {
-                if (LeftCondition == null)
-                {
-                    LeftCondition = condition;
-                }
-                else if (RightCondition == null)
-                {
-                    RightCondition = condition;
-                }
-                else
-                {
-                    RightCondition = new OrCondition(condition, RightCondition);
-                }
-            }
+            CreateBiCondition<OrCondition>(conditions);
         }
 
         public override object Clone()

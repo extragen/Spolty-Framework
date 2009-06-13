@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 
 namespace Spolty.Framework.Parameters.Conditionals
@@ -12,6 +13,9 @@ namespace Spolty.Framework.Parameters.Conditionals
     [XmlRoot("andCondition")]
     public class AndCondition : BiCondition
     {
+        private const int SizeInOneElement = 1;
+        private const int SizeInTwoElements = 2;
+
         #region Constructors
 
         /// <summary>
@@ -35,33 +39,9 @@ namespace Spolty.Framework.Parameters.Conditionals
         /// Creates <see cref="AndCondition"/> by <see cref="IList{T}"/> of conditions.
         /// </summary>
         /// <param name="conditions"></param>
-        public AndCondition(IList<BaseCondition> conditions) : this()
+        public AndCondition(IEnumerable<BaseCondition> conditions) : this()
         {
-            if (conditions == null || conditions.Count == 0)
-            {
-                throw new SpoltyException("conditions is incorrect");
-            }
-
-            LeftCondition = conditions[0];
-
-            BaseCondition rightCondition = null;
-
-            if (conditions.Count == 1)
-            {
-                return;
-            }
-            
-            if (conditions.Count >= 2)
-            {
-                rightCondition = conditions[1];
-            }
-
-            for (int index = 2; index < conditions.Count; index++)
-            {
-                rightCondition = new AndCondition(rightCondition, conditions[index]);
-            }
-
-            RightCondition = rightCondition;
+            CreateBiCondition<AndCondition>(conditions);
         }
 
         #endregion

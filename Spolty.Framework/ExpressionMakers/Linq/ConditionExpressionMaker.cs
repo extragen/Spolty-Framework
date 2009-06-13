@@ -6,6 +6,7 @@ using System.Reflection;
 using Spolty.Framework.Checkers;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers.Factories;
+using Spolty.Framework.Helpers;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
 
@@ -13,33 +14,23 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 {
     internal sealed class ConditionExpressionMaker : ExpressionMaker, IConditionExpressionMaker
     {
-        private static readonly Type StringType = typeof(String);
-        private static readonly Type IQueryableType = typeof (IQueryable);
-
         public ConditionExpressionMaker(IExpressionMakerFactory factory) : base(factory)
         {
         }
 
         #region IConditionExpressionMaker Members
 
-        public Expression Make(IEnumerable<BaseCondition> conditionals, Expression sourceExpression)
+        public Expression Make(IEnumerable<BaseCondition> conditions, Expression sourceExpression)
         {
-            Checker.CheckArgumentNull(conditionals, "conditionals");
+            Checker.CheckArgumentNull(conditions, "conditionals");
             Checker.CheckArgumentNull(sourceExpression, "sourceExpression");
 
             Type sourceType = GetGenericType(sourceExpression);
             ParameterExpression parameterExpression = CreateOrGetParameterExpression(sourceType, sourceType.Name);
-            foreach (BaseCondition baseCondition in conditionals)
-            {
-                Expression body = MakeConditionExpression(baseCondition, parameterExpression, ref sourceExpression);
+            AndCondition condition = new AndCondition(conditions);
 
-                if (body == null)
-                {
-                    continue;
-                }
-
-                sourceExpression = MakeWhere(sourceType, sourceExpression, body, parameterExpression);
-            }
+            Expression body = MakeConditionExpression(condition, parameterExpression, ref sourceExpression);
+            sourceExpression = MakeWhere(sourceType, sourceExpression, body, parameterExpression);
 
             return sourceExpression;
         }
@@ -47,160 +38,208 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         #endregion
 
         private Expression MakeConditionExpression(
-            BaseCondition condItem,
+            BaseCondition baseCondition,
             ParameterExpression parameter,
             ref Expression sourceExpression)
         {
             Expression body = null;
-            Condition cond;
             ParameterExpression pe;
-            if (condItem is Condition)
+            if (baseCondition is Condition)
             {
-                cond = (Condition) condItem;
+                Condition condition = (Condition) baseCondition;
                 Type sourceType = GetGenericType(sourceExpression);
 
-                if (cond.ElementType == null)
-                {
-                    pe = CreateOrGetParameterExpression(sourceType, sourceType.Name);
-                }
-                else
-                {
-                    var condition = ((Condition) condItem);
-                    pe = CreateOrGetParameterExpression(condition.ElementType, condition.ElementType.Name);
-                }
-                body = MakeSimpleCondition(cond, pe, ref sourceExpression);
+                pe = condition.ElementType == null
+                         ? CreateOrGetParameterExpression(sourceType, sourceType.Name)
+                         : CreateOrGetParameterExpression(condition.ElementType, condition.ElementType.Name);
+
+                body = MakeSimpleCondition(condition, pe, ref sourceExpression);
             }
-            else if (condItem is BoolCondition)
+            else if (baseCondition is BoolCondition)
             {
-                body = Expression.Constant(((BoolCondition) condItem).Value);
+                body = Expression.Constant(((BoolCondition) baseCondition).Value);
             }
-            else if (condItem is FieldCondition)
+            else if (baseCondition is FieldCondition)
             {
-                var fieldCondition = (FieldCondition) condItem;
+                var fieldCondition = (FieldCondition) baseCondition;
                 body = MakeSimpleCondition(fieldCondition);
             }
-            else if (condItem is BiCondition || condItem.GetType().IsSubclassOf(typeof (BiCondition)))
+            else if (baseCondition is BiCondition || baseCondition.GetType().IsSubclassOf(typeof (BiCondition)))
             {
-                var biCond = (BiCondition) condItem;
+                var biCondition = (BiCondition) baseCondition;
 
-                Expression leftExpr = null;
-                Expression rightExpr = null;
+                Expression leftExpression = null;
+                Expression rightExpression = null;
 
-                if (biCond.LeftCondition == null && biCond.RightCondition == null)
+                if (biCondition.LeftCondition == null && biCondition.RightCondition == null)
                 {
                     return null;
                 }
 
-                if (biCond.LeftCondition != null)
+                if (biCondition.LeftCondition != null)
                 {
-                    if (!(biCond.LeftCondition is Condition) || ((Condition) biCond.LeftCondition).ElementType == null)
+                    if (!(biCondition.LeftCondition is Condition) || ((Condition) biCondition.LeftCondition).ElementType == null)
                     {
                         pe = parameter;
                     }
                     else
                     {
-                        var leftCondition = ((Condition)biCond.LeftCondition);
+                        var leftCondition = ((Condition)biCondition.LeftCondition);
                         pe = CreateOrGetParameterExpression(leftCondition.ElementType, leftCondition.ElementType.Name);
                     }
 
-                    if (biCond.LeftCondition is Condition)
+                    if (biCondition.LeftCondition is Condition)
                     {
-                        leftExpr =
-                            MakeSimpleCondition((Condition) biCond.LeftCondition, pe,
+                        leftExpression =
+                            MakeSimpleCondition((Condition) biCondition.LeftCondition, pe,
                                                 ref sourceExpression);
                     }
                     else
                     {
-                        leftExpr = MakeConditionExpression(biCond.LeftCondition, pe, ref sourceExpression);
+                        leftExpression = MakeConditionExpression(biCondition.LeftCondition, pe, ref sourceExpression);
                     }
                 }
 
-                if (biCond.RightCondition != null)
+                if (biCondition.RightCondition != null)
                 {
-                    if (!(biCond.RightCondition is Condition) || ((Condition)biCond.RightCondition).ElementType == null)
+                    if (!(biCondition.RightCondition is Condition) || ((Condition)biCondition.RightCondition).ElementType == null)
                     {
                         pe = parameter;
                     }
                     else
                     {
-                        var rightCondition = ((Condition)biCond.RightCondition);
+                        var rightCondition = ((Condition)biCondition.RightCondition);
                         pe = CreateOrGetParameterExpression(rightCondition.ElementType, rightCondition.ElementType.Name);
                     }
 
-                    if (biCond.RightCondition is Condition)
+                    if (biCondition.RightCondition is Condition)
                     {
-                        rightExpr =
-                            MakeSimpleCondition((Condition) biCond.RightCondition, pe,
+                        rightExpression =
+                            MakeSimpleCondition((Condition) biCondition.RightCondition, pe,
                                                 ref sourceExpression);
                     }
                     else
                     {
-                        rightExpr =
-                            MakeConditionExpression(biCond.RightCondition, pe, ref sourceExpression);
+                        rightExpression =
+                            MakeConditionExpression(biCondition.RightCondition, pe, ref sourceExpression);
                     }
                 }
 
-                if (leftExpr == null && rightExpr == null)
+                if (leftExpression == null && rightExpression == null)
                 {
                     return null;
                 }
 
-                if (leftExpr == null)
+                if (leftExpression == null)
                 {
-                    body = rightExpr;
+                    body = rightExpression;
                 }
-                else if (rightExpr == null)
+                else if (rightExpression == null)
                 {
-                    body = leftExpr;
+                    body = leftExpression;
                 }
                 else
                 {
-                    if (biCond is OrCondition)
+                    if (biCondition is OrCondition)
                     {
-                        body = Expression.Or(leftExpr, rightExpr);
+                        body = Expression.Or(leftExpression, rightExpression);
                     }
-                    else if (biCond is AndCondition)
+                    else if (biCondition is AndCondition)
                     {
-                        body = Expression.And(leftExpr, rightExpr);
+                        body = Expression.And(leftExpression, rightExpression);
                     }
                 }
+            }
+            else if (baseCondition is PredicateAggregationCondition)
+            {
+                PredicateAggregationCondition predicateAggregationCondition = (PredicateAggregationCondition) baseCondition;
+                Type sourceType = GetGenericType(sourceExpression);
+                if (predicateAggregationCondition.ElementType != null && 
+                    predicateAggregationCondition.ElementType != sourceType)
+                {
+                    throw new SpoltyException(
+                        String.Format("Aggregation condition with ElementType {0} can not assign to queryable ElementType {1}",
+                                      predicateAggregationCondition.ElementType, sourceType));
+                }
+                
+                var memberExpression = CreateMemberExpression(sourceType, predicateAggregationCondition.EnumerableFieldName, parameter, IEnumerableType);
+                Expression conditionExpression = null;
+                if (predicateAggregationCondition.Conditions.Count > 0)
+                {
+                    Type memberType = GetGenericType(memberExpression);
+                    predicateAggregationCondition.Conditions.SetElementType(memberType);
+                    conditionExpression = MakeConditionExpression(new AndCondition(predicateAggregationCondition.Conditions), parameter,
+                                                   ref memberExpression);
+                    conditionExpression = Expression.Lambda(conditionExpression, CreateOrGetParameterExpression(memberType, memberType.Name));
+                }
+
+                switch (predicateAggregationCondition.AggregationMethod)
+                {
+                    case AggregationMethod.All:
+                        body = Factory.CreateExpressionMaker().MakeAll(memberExpression, conditionExpression);
+                        break;
+                    case AggregationMethod.Any:
+                        body = Factory.CreateExpressionMaker().MakeAny(memberExpression, conditionExpression);
+                        break;
+                    case AggregationMethod.Average:
+                        break;
+                    case AggregationMethod.Count:
+                        body = Factory.CreateExpressionMaker().MakeCount(memberExpression, conditionExpression);
+                        break;
+                    case AggregationMethod.Max:
+                        break;
+                    case AggregationMethod.Min:
+                        break;
+                    case AggregationMethod.Sum:
+                        break;
+                    default:
+                        throw new SpoltyException("Not supported AggregationMethod.");
+                }
+
+                body = MakeComparisonExpression(body, Expression.Constant(predicateAggregationCondition.Value),
+                                                predicateAggregationCondition.Operator);
+
             }
             return body;
         }
 
         private Expression MakeSimpleCondition(
-            Condition cond,
-            Expression param,
+            Condition condition,
+            Expression parameterExpression,
             ref Expression sourceExpression)
         {
             Expression body = null;
             const int mainPropertyIndex = 0;
             const int secondaryPropertyIndex = 1;
-            string[] properties = cond.FieldName.Split('.');
+            string[] properties = condition.FieldName.Split('.');
             Type sourceType = GetGenericType(sourceExpression);
-            Type parameterType = GetGenericType(param);
+            Type parameterType = GetGenericType(parameterExpression);
 
             Type workType = sourceType.Name == parameterType.Name ? sourceType : parameterType;
-            PropertyInfo pi = workType.GetProperty(properties[mainPropertyIndex]);
+            PropertyInfo propertyInfo = workType.GetProperty(properties[mainPropertyIndex]);
                                  
-            if (pi != null)
+            if (propertyInfo != null)
             {
-                Expression ex1 = Expression.Property(param, pi);
-                PropertyInfo piChild = pi;
+                Expression memberExpression = Expression.Property(parameterExpression, propertyInfo);
+                PropertyInfo childPropertyInfo = propertyInfo;
                 for (int index = secondaryPropertyIndex; index < properties.Length; index++)
                 {
-                    piChild = piChild.PropertyType.GetProperty(properties[index]);
-                    if (piChild == null)
+                    if (childPropertyInfo != null)
                     {
-                        if (pi.PropertyType.GetInterface(IQueryableType.Name) != null)
+                        childPropertyInfo = childPropertyInfo.PropertyType.GetProperty(properties[index]);
+                    }
+
+                    if (childPropertyInfo == null)
+                    {
+                        if (propertyInfo.PropertyType.GetInterface(IQueryableType.Name) != null)
                         {
                             int previousIndex = index - 1;
-                            var condition =
-                                new Condition(cond.FieldName.Remove(0, properties[previousIndex].Length), cond.Value,
-                                              cond.Operator);
-                            var innerConditions = new ConditionList(condition);
+                            var innerCondition =
+                                new Condition(condition.FieldName.Remove(0, properties[previousIndex].Length), condition.Value,
+                                              condition.Operator);
+                            var innerConditions = new ConditionList(innerCondition);
 
-                            IQueryable innerSource = Factory.GetTable(pi.PropertyType.GetGenericArguments()[0]);
+                            IQueryable innerSource = Factory.GetTable(ReflectionHelper.GetGenericType(propertyInfo.PropertyType));
 
                             Expression innerExpression = Make(innerConditions, innerSource.Expression);
 
@@ -209,14 +248,26 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                                                                                               innerSource.ElementType,
                                                                                               sourceType);
                         }
+
                         return body;
                     }
-                    ex1 = Expression.Property(ex1, piChild);
+                    memberExpression = Expression.Property(memberExpression, childPropertyInfo);
                 }
 
-                Expression ex2 = Expression.Constant(cond.Value, piChild.PropertyType);
+                Expression constantExpression;
+                Type valueType = condition.Value.GetType();
+                Type propertyType = ReflectionHelper.GetGenericType(childPropertyInfo.PropertyType);
+                if (valueType == propertyType || !IsConvertible(propertyType))
+                {
+                    constantExpression = Expression.Constant(condition.Value, childPropertyInfo.PropertyType);
+                }
+                else
+                {
+                    constantExpression = Expression.Constant(Convert.ChangeType(condition.Value, propertyType),
+                                                             childPropertyInfo.PropertyType);
+                }
 
-                body = MakeComarisonExpression(ex1, ex2, cond.Operator);
+                body = MakeComparisonExpression(memberExpression, constantExpression, condition.Operator);
             }
 
             return body;
@@ -242,18 +293,18 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 CreateOrGetParameterExpression(fieldCondition.RightElementType, fieldCondition.RightElementType.Name);
 
             Expression leftExpression =
-                CreatePropertyExpression(fieldCondition.LeftElementType, fieldCondition.LeftFieldName, leftParam);
+                CreateMemberExpression(fieldCondition.LeftElementType, fieldCondition.LeftFieldName, leftParam);
             Expression rightExpression =
-                CreatePropertyExpression(fieldCondition.RightElementType, fieldCondition.RightFieldName, rightParam);
+                CreateMemberExpression(fieldCondition.RightElementType, fieldCondition.RightFieldName, rightParam);
 
             rightExpression =
                 ConvertOrCastInnerPropertyExpression(leftPropertyInfo.PropertyType, rightPropertyInfo, rightExpression);
 
-            Expression body = MakeComarisonExpression(leftExpression, rightExpression, fieldCondition.Operator);
+            Expression body = MakeComparisonExpression(leftExpression, rightExpression, fieldCondition.Operator);
             return body;
         }
 
-        private static Expression MakeComarisonExpression(
+        private static Expression MakeComparisonExpression(
             Expression leftExpression,
             Expression rightExpression,
             ConditionOperator conditionOperator)
@@ -267,16 +318,16 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 case ConditionOperator.NotEqualTo:
                     body = Expression.NotEqual(leftExpression, rightExpression);
                     break;
-                case ConditionOperator.GreaterOrEqualTo:
+                case ConditionOperator.GreaterThanOrEqualTo:
                     body = Expression.GreaterThanOrEqual(leftExpression, rightExpression);
                     break;
-                case ConditionOperator.GreaterThen:
+                case ConditionOperator.GreaterThan:
                     body = Expression.GreaterThan(leftExpression, rightExpression);
                     break;
-                case ConditionOperator.LessOrEqualTo:
+                case ConditionOperator.LessThanOrEqualTo:
                     body = Expression.LessThanOrEqual(leftExpression, rightExpression);
                     break;
-                case ConditionOperator.LessThen:
+                case ConditionOperator.LessThan:
                     body = Expression.LessThan(leftExpression, rightExpression);
                     break;
                 case ConditionOperator.StartsWith:
@@ -300,24 +351,25 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         private static Expression MakeWhere(
             Type sourceType,
-            Expression source,
-            Expression body,
-            ParameterExpression parameter)
+            Expression sourceExpression,
+            Expression bodyExpression,
+            ParameterExpression parameterExpression)
         {
-            LambdaExpression lambdaExpression = Expression.Lambda(body, parameter);
+            LambdaExpression lambdaExpression = Expression.Lambda(bodyExpression, parameterExpression);
             Expression resultExpression = null;
-            if (source.Type.GetInterface(IQueryableType.Name) != null)
+            
+            if (ReflectionHelper.IsImplementingInterface(sourceExpression.Type, IQueryableType))
             {
-                resultExpression = CallQueryableMethod(MethodName.Where, new[] {sourceType}, source, Expression.Quote(lambdaExpression));
+                resultExpression = CallQueryableMethod(MethodName.Where, new[] {sourceType}, sourceExpression, Expression.Quote(lambdaExpression));
             }
-            else if (source.Type.GetInterface(IEnumerableType.Name) != null)
+            else if (ReflectionHelper.IsImplementingInterface(sourceExpression.Type, IEnumerableType))
             {
-                resultExpression = CallEnumerableMethod(MethodName.Where, new[] {sourceType}, source, lambdaExpression);
+                resultExpression = CallEnumerableMethod(MethodName.Where, new[] {sourceType}, sourceExpression, lambdaExpression);
             }
             
             if (resultExpression == null)
             {
-                throw new SpoltyException("source not implemented any required interfaces");
+                throw new SpoltyException("sourceExpression not implemented any required interfaces/");
             }
 
             return resultExpression;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.Objects;
@@ -148,19 +148,19 @@ namespace Spolty.Framework.ExpressionMakers.EntityFramework
             string format;
             switch (condition.Operator)
             {
-                case ConditionOperator.LessThen:
+                case ConditionOperator.LessThan:
                     format = PredicateConstants.FieldLessThanValueFormat;
                     break;
-                case ConditionOperator.LessOrEqualTo:
+                case ConditionOperator.LessThanOrEqualTo:
                     format = PredicateConstants.FieldLessThanEqualValueFormat;
                     break;
                 case ConditionOperator.EqualTo:
                     format = PredicateConstants.FieldEqualValueFormat;
                     break;
-                case ConditionOperator.GreaterOrEqualTo:
+                case ConditionOperator.GreaterThanOrEqualTo:
                     format = PredicateConstants.FieldGreateThanEqualValueFormat;
                     break;
-                case ConditionOperator.GreaterThen:
+                case ConditionOperator.GreaterThan:
                     format = PredicateConstants.FieldGreateThanValueFormat;
                     break;
                 case ConditionOperator.StartsWith:

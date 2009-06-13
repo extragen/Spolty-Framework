@@ -19,7 +19,9 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         protected static Type IEnumerableType;
         protected static Type QueryableType;
         private readonly IExpressionMakerFactory _factory;
-        protected static Type GenericIEnumerableType; 
+        protected static Type GenericIEnumerableType;
+        public static readonly Type StringType = typeof(String);
+        public static readonly Type IQueryableType = typeof (IQueryable);
 
         #region Constructors
 
@@ -45,88 +47,80 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             get { return _factory; }
         }
 
-        Expression IExpressionMaker.MakeExcept(Expression source, Expression except)
+        Expression IExpressionMaker.MakeExcept(Expression sourceExpression, Expression exceptExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-            Checker.CheckArgumentNull(except, "except");
+            Checker.CheckArgumentNull(sourceExpression, "sourceExpression");
+            Checker.CheckArgumentNull(exceptExpression, "exceptExpression");
 
-            Type sourceType = GetGenericType(source);
-            Type exceptType = GetGenericType(except);
+            Type sourceType = GetGenericType(sourceExpression);
+            Type exceptType = GetGenericType(exceptExpression);
 
             if (sourceType != exceptType)
             {
-                throw new SpoltyException("Type of source mismatch type of except");
+                throw new SpoltyException("Type of sourceExpression mismatch type of exceptExpression");
             }
 
-            return CallQueryableMethod(MethodName.Except, new[] { sourceType }, source, except);
+            return CallQueryableMethod(MethodName.Except, new[] { sourceType }, sourceExpression, exceptExpression);
         }
 
-        Expression IExpressionMaker.MakeSkip(int count, Expression source)
+        Expression IExpressionMaker.MakeSkip(int count, Expression sourceExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-
-            return CallQueryableMethod(MethodName.Skip, new[] { GetGenericType(source) }, source, Expression.Constant(count));
+            return CallMethod(MethodName.Skip, sourceExpression, Expression.Constant(count));
         }
 
-        Expression IExpressionMaker.MakeTake(int count, Expression source)
+        Expression IExpressionMaker.MakeTake(int count, Expression sourceExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-
-            //TODO: for sequence
-            return CallQueryableMethod(MethodName.Take, new[] { GetGenericType(source)}, source, Expression.Constant(count));
-            //return QueryExpression.Take(source, Expression.Constant(count));
+            return CallMethod(MethodName.Take, sourceExpression, Expression.Constant(count));
         }
 
-        Expression IExpressionMaker.MakeUnion(Expression source, Expression union)
+        Expression IExpressionMaker.MakeUnion(Expression sourceExpression, Expression unionExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-            Checker.CheckArgumentNull(union, "union");
+            Checker.CheckArgumentNull(sourceExpression, "sourceExpression");
+            Checker.CheckArgumentNull(unionExpression, "unionExpression");
 
-            Type sourceType = GetGenericType(source);
-            Type exceptType = GetGenericType(union);
+            Type sourceType = GetGenericType(sourceExpression);
+            Type exceptType = GetGenericType(unionExpression);
 
             if (sourceType != exceptType)
             {
-                throw new SpoltyException("Type of source mismatch type of union");
+                throw new SpoltyException("Type of sourceExpression mismatch type of unionExpression");
             }
 
-            return CallQueryableMethod(MethodName.Union, new[] { sourceType }, source, union);
-            //return QueryExpression.Except(source, except);
+            return CallQueryableMethod(MethodName.Union, new[] { sourceType }, sourceExpression, unionExpression);
         }
 
-        Expression IExpressionMaker.MakeDistinct(Expression source)
+        Expression IExpressionMaker.MakeDistinct(Expression sourceExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-
-            return CallQueryableMethod(MethodName.Distinct, new[] { GetGenericType(source) }, source);
+            return CallMethod(MethodName.Distinct, sourceExpression, null);
         }
 
-        Expression IExpressionMaker.MakeAny(Expression source)
+        Expression IExpressionMaker.MakeAny(Expression sourceExpression, Expression conditionExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-
-            return CallQueryableMethod(MethodName.Any, new[] {GetGenericType(source)}, source);
+            return CallMethod(MethodName.Any, sourceExpression, conditionExpression);
         }
 
-        Expression IExpressionMaker.MakeCount(Expression source)
+        #region Implementation of IExpressionMaker
+
+        public Expression MakeAll(Expression sourceExpression, Expression conditionExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
-           
-            return CallQueryableMethod(MethodName.Count, new[] { GetGenericType(source) }, source);
+            return CallMethod(MethodName.All, sourceExpression, conditionExpression);
         }
 
-        Expression IExpressionMaker.MakeFirst(Expression source)
-        {
-            Checker.CheckArgumentNull(source, "source");
+        #endregion
 
-            return CallQueryableMethod(MethodName.First, new[] { GetGenericType(source) }, source);
+        Expression IExpressionMaker.MakeCount(Expression sourceExpression, Expression conditionExpression)
+        {
+            return CallMethod(MethodName.Count, sourceExpression, conditionExpression);
         }
 
-        Expression IExpressionMaker.MakeFirstOrDefault(Expression source)
+        Expression IExpressionMaker.MakeFirst(Expression sourceExpression)
         {
-            Checker.CheckArgumentNull(source, "source");
+            return CallMethod(MethodName.First, sourceExpression, null);
+        }
 
-            return CallQueryableMethod(MethodName.FirstOrDefault, new[] { GetGenericType(source) }, source);
+        Expression IExpressionMaker.MakeFirstOrDefault(Expression sourceExpression)
+        {
+            return CallMethod(MethodName.FirstOrDefault, sourceExpression, null);
         }
 
         #endregion
@@ -135,32 +129,50 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
         internal static Type GetGenericType(Expression sourceExpression)
         {
-            const int genericIndex = 0;
-
-            if (!sourceExpression.Type.IsGenericType)
-            {
-                return sourceExpression.Type;
-            }
-
-            Type[] genericArguments = sourceExpression.Type.GetGenericArguments();
-
-            if (genericArguments.Length == 0)
-            {
-                throw new ArgumentException("sourceExpression is not generic source");
-            }
-
-            return genericArguments[genericIndex];
+            return ReflectionHelper.GetGenericType(sourceExpression.Type);
         }
 
-        internal static Expression CreatePropertyExpression(Type sourceType, string propertyName, Expression parameter)
+        internal static Expression CreateMemberExpression(Type sourceType, string memberName, Expression parameter, params Type[] interfaceRestriction)
         {
-            PropertyInfo propertyInfo = sourceType.GetProperty(propertyName);
-            if (propertyInfo == null)
+            MemberInfo memberInfo = ReflectionHelper.GetMemberInfo(sourceType, memberName);
+            if (memberInfo == null)
             {
-                throw new SpoltyException(String.Format("property not found: {0}", propertyName));
+                throw new SpoltyException(String.Format("member not found: {0}", memberName));
             }
 
-            return Expression.Property(parameter, propertyInfo);
+            if (interfaceRestriction != null)
+            {
+                Type memberType = ReflectionHelper.GetMemberType(memberInfo);
+                foreach (var restriction in interfaceRestriction)
+                {
+                    if (!ReflectionHelper.IsImplementingInterface(memberType, restriction))
+                    {
+                        throw new SpoltyException(String.Format("memberInfo not implement interface {0}", restriction));
+                    }
+                }
+            }
+
+            MemberExpression memberExpression;
+
+            if (memberInfo is FieldInfo)
+            {
+                memberExpression = Expression.Field(parameter, (FieldInfo) memberInfo);
+            }
+            else if (memberInfo is PropertyInfo)
+            {
+                memberExpression = Expression.Property(parameter, (PropertyInfo) memberInfo);
+            }
+            else
+            {
+                throw new SpoltyException("memberInfo not supported.");
+            }
+
+            if (memberExpression == null)
+            {
+                throw new SpoltyException("memberExpression not created.");
+            }
+
+            return memberExpression;
         }
 
         internal ParameterExpression CreateOrGetParameterExpression(Type type, string name)
@@ -184,46 +196,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             return result;
         }
 
-        internal Type DynamicType
-        {
-            get
-            {
-                object storedValue;
-                if (Factory.Store.TryGetValue("DynamicType", out storedValue))
-                {
-                    return (Type) storedValue;
-                }
-
-                return null;
-            }
-            set
-            {
-                object storedValue;
-                if (Factory.Store.TryGetValue("DynamicType", out storedValue))
-                {
-                    storedValue = value;
-                }
-                else
-                {
-                    Factory.Store.Add("DynamicType", value);
-                }
-            }
-        }
-
-        internal static LambdaExpression CreateLambdaExpression(Type sourceType, string includingProperty,
+        internal static LambdaExpression CreateLambdaExpression(Type sourceType, string includingMember,
                                                              ParameterExpression parameter, MemberExpression member)
         {
-            Expression property;
-            if (member == null)
-            {
-                property = CreatePropertyExpression(sourceType, includingProperty, parameter);
-            }
-            else
-            {
-                property =
-                    CreatePropertyExpression(ReflectionHelper.GetMemberType(member.Member), includingProperty, member);
-            }
-            return Expression.Lambda(property, parameter);
+            Expression memberExpression = member == null
+                                              ? CreateMemberExpression(sourceType, includingMember, parameter)
+                                              : CreateMemberExpression(ReflectionHelper.GetMemberType(member.Member),
+                                                                       includingMember, member);
+            return Expression.Lambda(memberExpression, parameter);
         }
 
         internal static Expression ConvertOrCastInnerPropertyExpression(Type outerPropertyType,
@@ -232,19 +212,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         {
             if (!innerPropertyInfo.PropertyType.IsGenericType)
             {
-                if (IsConvertible(outerPropertyType))
-                {
-                    innerPropertyExpression = Expression.Convert(innerPropertyExpression, outerPropertyType);
-                }
-                else
-                {
-                    innerPropertyExpression = Expression.TypeAs(innerPropertyExpression, outerPropertyType);
-                }
+                innerPropertyExpression = IsConvertible(outerPropertyType)
+                                              ? Expression.Convert(innerPropertyExpression, outerPropertyType)
+                                              : Expression.TypeAs(innerPropertyExpression, outerPropertyType);
             }
             return innerPropertyExpression;
         }
 
-        private static bool IsConvertible(Type type)
+        internal static bool IsConvertible(Type type)
         {
             if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof (Nullable<>)))
             {
@@ -285,6 +260,36 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                                                                   params Expression[] arguments)
         {
             return Expression.Call(EnumerableType, methodName, typeArguments, arguments);
+        }
+
+        protected static Expression CallMethod(string methodName, Expression sourceExpression, Expression conditionExpression)
+        {
+            Checker.CheckArgumentNull(sourceExpression, "sourceExpression");
+
+            Expression resultExpression = null;
+
+            Type sourceType = GetGenericType(sourceExpression);
+            if (ReflectionHelper.IsImplementingInterface(sourceExpression.Type, IQueryableType))
+            {
+                resultExpression = conditionExpression == null
+                                       ? CallQueryableMethod(methodName, new[] {sourceType}, sourceExpression)
+                                       : CallQueryableMethod(methodName, new[] {sourceType}, sourceExpression,
+                                                             Expression.Quote(conditionExpression));
+            }
+            else if (ReflectionHelper.IsImplementingInterface(sourceExpression.Type, IEnumerableType))
+            {
+                resultExpression = conditionExpression == null
+                                       ? CallEnumerableMethod(methodName, new[] {sourceType}, sourceExpression)
+                                       : CallEnumerableMethod(methodName, new[] {sourceType}, sourceExpression,
+                                                              conditionExpression);
+            }
+
+            if (resultExpression == null)
+            {
+                throw new SpoltyException("sourceExpression not implemented any required interfaces.");
+            }
+
+            return resultExpression;
         }
 
         #endregion

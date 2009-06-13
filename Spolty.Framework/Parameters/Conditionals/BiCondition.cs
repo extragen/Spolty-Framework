@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Spolty.Framework.Checkers;
 
 namespace Spolty.Framework.Parameters.Conditionals
 {
@@ -80,6 +82,26 @@ namespace Spolty.Framework.Parameters.Conditionals
                 }
             }
             return false;
+        }
+
+        protected void CreateBiCondition<T>(IEnumerable<BaseCondition> conditions) where T : BiCondition, new()
+        {
+            Checker.CheckArgumentNull(conditions, "conditions");
+            foreach (BaseCondition condition in conditions)
+            {
+                if (LeftCondition == null)
+                {
+                    LeftCondition = condition;
+                }
+                else if (RightCondition == null)
+                {
+                    RightCondition = condition;
+                }
+                else
+                {
+                    RightCondition = new T { LeftCondition = condition, RightCondition = RightCondition };
+                }
+            }
         }
     }
 }

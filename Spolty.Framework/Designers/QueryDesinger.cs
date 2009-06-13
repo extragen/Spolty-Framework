@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using Spolty.Framework.Activators;
 using Spolty.Framework.Checkers;
 using Spolty.Framework.ConfigurationSections;
 using Spolty.Framework.Exceptions;
 using Spolty.Framework.ExpressionMakers;
 using Spolty.Framework.ExpressionMakers.Factories;
+using Spolty.Framework.Helpers;
 using Spolty.Framework.Parameters;
 using Spolty.Framework.Parameters.BaseNode;
 using Spolty.Framework.Parameters.Conditionals;
@@ -45,9 +45,7 @@ namespace Spolty.Framework.Designers
 
         public IEnumerator GetEnumerator()
         {
-            object returnValue = Provider.CreateQuery(Expression);
-
-            return ((IEnumerable) returnValue).GetEnumerator();
+            return _expressionMakerFactory.CreateEnumeratorProvider(ElementType, Provider, _expression).GetEnumerator();
         }
 
         /// <summary>
@@ -267,7 +265,7 @@ namespace Spolty.Framework.Designers
         ///
         /// // create child node Category with propertyName "Products". 
         /// // Because Category linked with Product by next property:
-        /// // public EntitySet<Product> Products 
+        /// // public EntitySet{Product} Products 
         /// var categoryNode = new JoinNode(typeof (Category), "Products");
         /// 
         /// // add categoryNode to root node
@@ -323,6 +321,27 @@ namespace Spolty.Framework.Designers
             return this;
         }
 
+        public IQueryable<TResult> Cast<TResult>()
+        {
+            if (ElementType == ReflectionHelper.GetGenericType(_expression.Type))
+            {
+                return Provider.CreateQuery(_expression).Cast<TResult>();
+            }
+
+            var results = new List<TResult>();
+            IEnumerator enumerator = GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                results.Add((TResult) enumerator.Current);
+            }
+            return results.AsQueryable();
+        }
+
+        public override string ToString()
+        {
+            return _expression.ToString();
+        }
+
         #region Skip, Take, Distinct
 
         /// <summary>
@@ -370,7 +389,7 @@ namespace Spolty.Framework.Designers
         {
             var copy = (QueryDesinger) Clone();
 
-            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeCount(copy._expression);
+            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeCount(copy._expression, null);
 
             return (int) copy.Provider.Execute(copy._expression);
         }
@@ -383,7 +402,7 @@ namespace Spolty.Framework.Designers
         {
             var copy = (QueryDesinger) Clone();
 
-            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeAny(copy._expression);
+            copy._expression = copy._expressionMakerFactory.CreateExpressionMaker().MakeAny(copy._expression, null);
 
             return (bool) copy.Provider.Execute(copy._expression);
         }
@@ -413,7 +432,7 @@ namespace Spolty.Framework.Designers
 
             return copy.Provider.Execute(copy._expression);
         }
- 
+
         #endregion
 
         #region Private methods
@@ -440,42 +459,13 @@ namespace Spolty.Framework.Designers
                     collection.UseFactory.Type, new[] {_context});
         }
 
-        private Expression AddChildren(Expression rootExpression, BaseNode node,
-                                       ConditionList conditions, IEnumerable<Ordering> orderings)
+        private Expression AddChildren(Expression rootExpression, JoinNode node, params IParameterMarker[] parameters)
         {
-            Expression newExpression = rootExpression;
             IJoinExpressionMaker maker = _expressionMakerFactory.CreateJoinExpressionMaker();
-            foreach (JoinNode childNode in node.ChildNodes)
-            {
-                if (childNode.ChildNodes.Count > 0)
-                {
-                    var queryDesinger = new QueryDesinger(_context, childNode.EntityType);
-                    queryDesinger.AddConditions(conditions);
-                    queryDesinger.AddOrderings(orderings);
-
-                    Expression outerExpression = queryDesinger.Expression;
-                    Expression childrenExpression = AddChildren(outerExpression, childNode, conditions, orderings);
-                    newExpression = maker.Make(newExpression, childrenExpression, childNode,
-                                               conditions);
-                }
-                else
-                {
-                    var queryDesinger = new QueryDesinger(_context, childNode.EntityType);
-                    queryDesinger.AddConditions(childNode.Conditions);
-                    queryDesinger.AddOrderings(orderings);
-
-                    newExpression = maker.Make(newExpression, queryDesinger.Expression, childNode,
-                                               conditions);
-                }
-            }
+            Expression newExpression = maker.Make(rootExpression, node, parameters);
             return newExpression;
         }
 
         #endregion
-
-        public override string ToString()
-        {
-            return _expression.ToString();
-        }
     }
 }

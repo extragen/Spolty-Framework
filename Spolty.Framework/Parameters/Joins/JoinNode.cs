@@ -20,6 +20,7 @@ namespace Spolty.Framework.Parameters.Joins
         private readonly List<string> _parentFieldsNames;
         private readonly string _associatedPropertyName;
         private JoinType _joinWithParentBy;
+        private readonly string _parentPropertyName;
 
         /// <summary>
         /// Creates <see cref="JoinNode"/> object by entityType. Use only for Linq To Sql.
@@ -27,7 +28,7 @@ namespace Spolty.Framework.Parameters.Joins
         /// </summary>
         /// <param name="entityType">Type of entity</param>
         public JoinNode(Type entityType)
-            : this(entityType, entityType.Name)
+            : this(entityType, String.Empty, entityType.Name)
         {
         }
 
@@ -40,7 +41,7 @@ namespace Spolty.Framework.Parameters.Joins
         /// <param name="currentFieldsNames">fields which defined for the current Entity.</param>
         public JoinNode(Type entityType, IEnumerable<string> parentFieldsNames,
                         IEnumerable<string> currentFieldsNames)
-            : this(entityType, entityType.Name)
+            : this(entityType, String.Empty, entityType.Name)
         {
             if (parentFieldsNames == null)
             {
@@ -74,7 +75,7 @@ namespace Spolty.Framework.Parameters.Joins
         /// <param name="currentFieldsNames">fields which defined for the current Entity.</param>
         /// <param name="joinWithParentBy">defines join between two Entity queries.</param>
         public JoinNode(Type entityType, IEnumerable<string> parentFieldsNames, IEnumerable<string> currentFieldsNames, JoinType joinWithParentBy)
-            : this(entityType, entityType.Name, joinWithParentBy)
+            : this(entityType, String.Empty, entityType.Name, joinWithParentBy)
         {
             Checker.CheckArgumentNull(parentFieldsNames, "parentFieldsNames");
             Checker.CheckArgumentNull(currentFieldsNames, "currentFieldsNames");
@@ -93,15 +94,15 @@ namespace Spolty.Framework.Parameters.Joins
             _currentFieldsNames.TrimExcess();
         }
 
-        /// <summary>
-        /// Creates child <see cref="JoinNode"/> object by entityType and defines join between Entity query.
-        /// </summary>
-        /// <param name="entityType">Type of Entity.</param>
-        /// <param name="joinWithParentBy">defines join between two Entity queries.</param>
-        public JoinNode(Type entityType, JoinType joinWithParentBy)
-            : this(entityType, entityType.Name, joinWithParentBy)
-        {
-        }
+//        /// <summary>
+//        /// Creates child <see cref="JoinNode"/> object by entityType and defines join between Entity query.
+//        /// </summary>
+//        /// <param name="entityType">Type of Entity.</param>
+//        /// <param name="joinWithParentBy">defines join between two Entity queries.</param>
+//        public JoinNode(Type entityType, JoinType joinWithParentBy)
+//            : this(entityType, entityType.Name, joinWithParentBy)
+//        {
+//        }
 
         /// <summary>
         /// Creates child <see cref="JoinNode"/> object by entityType and defined in Entity <paramref name="associatedPropertyName"/> 
@@ -110,11 +111,12 @@ namespace Spolty.Framework.Parameters.Joins
         /// </summary>
         /// <param name="entityType">Type of Entity.</param>
         /// <param name="associatedPropertyName">associated with parent property.</param>
-        public JoinNode(Type entityType, string associatedPropertyName) : base(entityType)
+        public JoinNode(Type entityType, string parentPropertyName, string associatedPropertyName) : base(entityType)
         {
             Checker.CheckArgumentNull(entityType, "entityType");
             Checker.CheckArgumentNull(associatedPropertyName, "associatedPropertyName");
 
+            _parentPropertyName = parentPropertyName;
             _associatedPropertyName = associatedPropertyName;
             _isTypeNameEqualAssociatedPropertyName = _associatedPropertyName == entityType.Name;
             _childNodes = new JoinNodeList(this);
@@ -127,10 +129,11 @@ namespace Spolty.Framework.Parameters.Joins
         /// which associated with parent Entity.
         /// </summary>
         /// <param name="entityType">Type of Entity.</param>
+        /// <param name="parentPropertyName"></param>
         /// <param name="associatedPropertyName">associated with parent property.</param>
         /// <param name="joinWithParentBy">defines join between two Entity queries.</param>
-        public JoinNode(Type entityType, string associatedPropertyName, JoinType joinWithParentBy)
-            : this(entityType, associatedPropertyName)
+        public JoinNode(Type entityType, string parentPropertyName, string associatedPropertyName, JoinType joinWithParentBy)
+            : this(entityType, parentPropertyName, associatedPropertyName)
         {
             _joinWithParentBy = joinWithParentBy;
         }
@@ -176,6 +179,11 @@ namespace Spolty.Framework.Parameters.Joins
         public string AssociatedPropertyName
         {
             get { return _associatedPropertyName; }
+        }
+
+        public string ParentPropertyName
+        {
+            get { return _parentPropertyName; }
         }
 
         /// <summary>
@@ -240,5 +248,29 @@ namespace Spolty.Framework.Parameters.Joins
             result ^= _joinWithParentBy.GetHashCode();
             return result;
         }
+
+        #region IComparer<JoinNode> Members
+
+        ///<summary>
+        ///Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
+        ///</summary>
+        ///<returns>
+        ///Value Condition Less than zerox is less than y.Zerox equals y.Greater than zerox is greater than y.
+        ///</returns>
+        ///<param name="y">The second object to compare.</param>
+        ///<param name="x">The first object to compare.</param>
+        public override int Compare(BaseNode.BaseNode x, BaseNode.BaseNode y)
+        {
+            const int hash = 100000000;
+            int xHash = x.EntityType.GetHashCode();
+            xHash += ((JoinNode) x).JoinWithParentBy == JoinType.InnerJoin ? 0 : hash;
+
+            int yHash = y.EntityType.GetHashCode();
+            yHash += ((JoinNode) y).JoinWithParentBy == JoinType.InnerJoin ? 0 : hash;
+            return xHash - yHash;
+        }
+
+        #endregion
+
     }
 }

@@ -62,8 +62,10 @@
     <Compile Include="ConfigurationSections\FactoryConfiguration.cs" />
     <Compile Include="ConfigurationSections\FactoryConfigurationCollection.cs" />
     <Compile Include="ConfigurationSections\SpoltyFrameworkSectionHandler.cs" />
+    <Compile Include="Designers\DefaultEnumeratorProvider.cs" />
+    <Compile Include="Designers\IEnumeratorProvider.cs" />
+    <Compile Include="Designers\LinqEnumeratorProvider.cs" />
     <Compile Include="DynamicQueryable.cs" />
-    <Compile Include="Exceptions\SArgumentNullException.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\EFJoinMaker.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\PredicateConstants.cs" />
     <Compile Include="ExpressionMakers\EntityFramework\PredicateMaker.cs" />
@@ -77,6 +79,7 @@
     <Compile Include="ExpressionMakers\Linq\MethodName.cs" />
     <Compile Include="ExpressionMakers\Linq\OrderingExpressionMaker.cs" />
     <Compile Include="Parameters\Conditionals\AndCondition.cs" />
+    <Compile Include="Parameters\Conditionals\AllCondition.cs" />
     <Compile Include="Parameters\Conditionals\BaseCondition.cs" />
     <Compile Include="Parameters\Conditionals\BiCondition.cs" />
     <Compile Include="Parameters\Conditionals\BoolCondition.cs" />
@@ -91,30 +94,15 @@
     <Compile Include="Parameters\BaseNode\BaseNode.cs" />
     <Compile Include="Parameters\BaseNode\BaseNodeList.cs" />
     <Compile Include="Parameters\Joins\Enums\JoinType.cs" />
-    <Compile Include="Parameters\Loads\LoadNode.cs" />
-    <Compile Include="Parameters\Loads\LoadTree.cs" />
-    <Compile Include="Parameters\Joins\Item.cs" />
-    <Compile Include="Parameters\Joins\JoinItem.cs" />
-    <Compile Include="Parameters\Joins\JoinList.cs" />
     <Compile Include="Parameters\Joins\JoinNode.cs" />
     <Compile Include="Parameters\Joins\JoinNodeList.cs" />
     <Compile Include="Parameters\Orderings\Enums\SortDirection.cs" />
     <Compile Include="Parameters\Orderings\Ordering.cs" />
     <Compile Include="Parameters\Orderings\OrderingList.cs" />
-    <Compile Include="Parameters\Paging\PagingParameter.cs" />
     <Compile Include="Parsers\ParametersParser.cs" />
     <Compile Include="Helpers\ReflectionHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Designers\QueryDesinger.cs" />
-    <Compile Include="System\ClassFactory.cs" />
-    <Compile Include="System\DynamicClass.cs" />
-    <Compile Include="System\DynamicExpression.cs" />
-    <Compile Include="System\DynamicOrdering.cs" />
-    <Compile Include="System\DynamicProperty.cs" />
-    <Compile Include="Parsers\ExpressionParser.cs" />
-    <Compile Include="Exceptions\SParseException.cs" />
-    <Compile Include="System\Signature.cs" />
-    <Compile Include="System\Res.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="spolty.pfx" />

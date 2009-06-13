@@ -95,5 +95,35 @@ namespace Spolty.Framework.Helpers
         {
             return type.IsAssignableFrom(type1);
         }
+        
+        public static bool IsImplementingInterface(Type sourceType, Type interfaceType)
+        {
+            return sourceType.GetInterface(interfaceType.Name) != null;
+        }
+
+        public static bool IsNullableType(Type type)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+
+        public static Type GetGenericType(Type type)
+        {
+            const int genericIndex = 0;
+
+            if (!type.IsGenericType)
+            {
+                return type;
+            }
+
+            Type[] genericArguments =type.GetGenericArguments();
+
+            if (genericArguments.Length == 0)
+            {
+                throw new ArgumentException("type is not generic source");
+            }
+
+            return genericArguments[genericIndex];
+        }
     }
 }

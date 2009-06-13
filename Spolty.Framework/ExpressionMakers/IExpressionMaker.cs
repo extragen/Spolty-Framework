@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Spolty.Framework.ExpressionMakers.Factories;
+using Spolty.Framework.Parameters;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Joins;
 using Spolty.Framework.Parameters.Orderings;
@@ -10,15 +11,16 @@ namespace Spolty.Framework.ExpressionMakers
     public interface IExpressionMaker
     {
         IExpressionMakerFactory Factory { get; }
-        Expression MakeDistinct(Expression source);
-        Expression MakeCount(Expression source);
-        Expression MakeAny(Expression source);
-        Expression MakeFirst(Expression source);
-        Expression MakeFirstOrDefault(Expression source);
-        Expression MakeUnion(Expression source, Expression union);
-        Expression MakeExcept(Expression source, Expression except);
-        Expression MakeTake(int count, Expression source);
-        Expression MakeSkip(int count, Expression source);
+        Expression MakeDistinct(Expression sourceExpression);
+        Expression MakeCount(Expression sourceExpression, Expression conditionExpression);
+        Expression MakeAny(Expression sourceExpression, Expression conditionExpression);
+        Expression MakeAll(Expression sourceExpression, Expression conditionExpression);
+        Expression MakeFirst(Expression sourceExpression);
+        Expression MakeFirstOrDefault(Expression sourceExpression);
+        Expression MakeUnion(Expression sourceExpression, Expression unionExpression);
+        Expression MakeExcept(Expression sourceExpression, Expression exceptExpression);
+        Expression MakeTake(int count, Expression sourceExpression);
+        Expression MakeSkip(int count, Expression sourceExpression);
     }
 
     public interface IConditionExpressionMaker : IExpressionMaker
@@ -33,7 +35,6 @@ namespace Spolty.Framework.ExpressionMakers
 
     public interface IJoinExpressionMaker : IExpressionMaker
     {
-        Expression Make(Expression outerExpression, Expression innerExpression, JoinNode childNode,
-                        ConditionList parameter);
+        Expression Make(Expression rootExpression, JoinNode rootNode, params IParameterMarker[] parameters);
     }
 }

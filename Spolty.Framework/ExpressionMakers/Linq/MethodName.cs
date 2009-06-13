@@ -11,6 +11,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         public const string ThenByDescending = "ThenByDescending";
         public const string Count = "Count";
         public const string Any = "Any";
+        public const string All = "All";
         public const string Distinct = "Distinct";
         public const string Union = "Union";
         public const string Take = "Take";
@@ -24,5 +25,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
         public const string Contains = "Contains";
         public const string EndsWith = "EndsWith";
         public const string StartsWith = "StartsWith";
+        public const string SetSource = "SetSource";
+        public const string MainProperty = "MainProperty";
     }
 }

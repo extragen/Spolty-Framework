@@ -2,12 +2,12 @@ namespace Spolty.Framework.Parameters.Conditionals.Enums
 {
     public enum ConditionOperator
     {
-        LessThen,
-        LessOrEqualTo,
+        LessThan,
+        LessThanOrEqualTo,
         EqualTo,
         NotEqualTo,
-        GreaterOrEqualTo,
-        GreaterThen,
+        GreaterThanOrEqualTo,
+        GreaterThan,
         StartsWith,
         Like,
         EndsWith

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq;
+using System.Linq.Expressions;
 using Spolty.Framework.Checkers;
+using Spolty.Framework.Designers;
 using Spolty.Framework.ExpressionMakers.Linq;
 
 namespace Spolty.Framework.ExpressionMakers.Factories
@@ -52,6 +54,11 @@ namespace Spolty.Framework.ExpressionMakers.Factories
         public IQueryable GetTable(Type entityType)
         {
             return ((DataContext) CurrentContext).GetTable(entityType);
+        }
+
+        public IEnumeratorProvider CreateEnumeratorProvider(Type entityType, IQueryProvider provider, Expression expression)
+        {
+            return new LinqEnumeratorProvider(entityType, provider, expression);
         }
 
         #endregion

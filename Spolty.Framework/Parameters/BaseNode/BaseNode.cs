@@ -150,7 +150,7 @@ namespace Spolty.Framework.Parameters.BaseNode
         ///</returns>
         ///<param name="y">The second object to compare.</param>
         ///<param name="x">The first object to compare.</param>
-        public int Compare(BaseNode x, BaseNode y)
+        public virtual int Compare(BaseNode x, BaseNode y)
         {
             return x.EntityType.GetHashCode() - y.EntityType.GetHashCode();
         }

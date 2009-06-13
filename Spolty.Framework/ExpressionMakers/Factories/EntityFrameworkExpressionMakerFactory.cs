@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Data.Objects;
 using System.Linq;
+using System.Linq.Expressions;
 using Spolty.Framework.Checkers;
+using Spolty.Framework.Designers;
 using Spolty.Framework.ExpressionMakers.EntityFramework;
 using Spolty.Framework.ExpressionMakers.Linq;
 
@@ -55,6 +57,11 @@ namespace Spolty.Framework.ExpressionMakers.Factories
                 (ObjectQuery)
                 oq.GetConstructors()[0].Invoke(new object[] {String.Format("[{0}]", entityType.Name), context});
             return objectQuery;
+        }
+
+        public IEnumeratorProvider CreateEnumeratorProvider(Type entityType, IQueryProvider provider, Expression expression)
+        {
+            return new DefaultEnumeratorProvider(entityType, provider, expression);
         }
 
         #endregion

@@ -13,6 +13,15 @@ namespace Spolty.Framework.Checkers
             return value;
         }
 
+        internal static string CheckStringArgumentNull(string value, string parameterName) 
+        {
+            if (String.IsNullOrEmpty(value))
+            {
+                ThrowArgumentNullException(parameterName);
+            }
+            return value;
+        }
+
         internal static void ThrowArgumentNullException(string parameterName)
         {
             throw ArgumentNull(parameterName);

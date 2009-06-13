@@ -1,8 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
-using System.Data.Linq;
+using System.Linq.Dynamic;
 using System.Data.SqlClient;
 using System.Linq;
 using LinqNorthwind.Entities;
@@ -95,7 +96,7 @@ namespace Linq.Test
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            root.AddChildren(new JoinNode(typeof (Category), "Products"));
+            root.AddChildren(new JoinNode(typeof (Category),  "Category", "Products"));
 
             var queryDesinger = new QueryDesinger(context, root);
             var list = new List<Product>(queryDesinger.Cast<Product>());
@@ -161,7 +162,7 @@ namespace Linq.Test
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof (Category), "Products");
+            var categoryNode = new JoinNode(typeof (Category),  "Category", "Products");
             root.AddChildren(categoryNode);
 
             // add condition for filtering by CategoryName == "Condiments"
@@ -206,7 +207,7 @@ WHERE Categories.CategoryName = N'Condiments'";
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof (Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, root);
@@ -253,7 +254,7 @@ WHERE Categories.CategoryName = N'Condiments'";
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof (Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, root);
@@ -308,7 +309,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof (Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
             root.AddChildren(categoryNode);
 
             // add condition for filtering by CategoryName == "Condiments"
@@ -350,7 +351,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof (Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
             root.AddChildren(categoryNode);
 
             var queryDesinger = new QueryDesinger(context, typeof(Product));
@@ -412,7 +413,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var orCondition = new OrCondition(productCondition, categoryCondition);
 
             // create condition for filtering by [Order Details].Discount > 0.15
-            var discountCondition = new Condition("Discount", 0.15F, ConditionOperator.GreaterThen,
+            var discountCondition = new Condition("Discount", 0.15F, ConditionOperator.GreaterThan,
                                                   typeof (Order_Detail));
 
             var conditionals = new ConditionList(orCondition, discountCondition);
@@ -491,7 +492,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var orCondition = new OrCondition(productCondition, categoryCondition);
 
             // create condition for filtering by [Order Details].Discount > 0.15
-            var discountCondition = new Condition("Discount", 0.15F, ConditionOperator.GreaterThen,
+            var discountCondition = new Condition("Discount", 0.15F, ConditionOperator.GreaterThan,
                                                   typeof (Order_Detail));
 
             var conditionals = new ConditionList(orCondition, discountCondition);
@@ -571,10 +572,11 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add second child node Order_Detail. PropertyName not defined
             // because Order_Detail linked with Product by next property:
             // public Product Product - name of property is equal name of type 
-            var orderDetailNode = new JoinNode(typeof (Order_Detail));
-            var categoryNode = new JoinNode(typeof (Category), JoinType.LeftOuterJoin);
-            var supplierNode = new JoinNode(typeof (Supplier));
-            root.AddChildren(orderDetailNode, categoryNode, supplierNode);
+            var orderDetailNode = new JoinNode(typeof(Order_Detail));
+            var categoryNode = new JoinNode(typeof (Category), "Category", "Products");
+            var categoryLeftNode = new JoinNode(typeof (Category), "Category", "Products", JoinType.LeftOuterJoin);
+            var supplierNode = new JoinNode(typeof (Supplier), "Supplier", "Products");
+            root.AddChildren(orderDetailNode, categoryNode, supplierNode, categoryLeftNode);
 
             var orderNode = new JoinNode(typeof (Order));
             orderDetailNode.AddChildren(orderNode);
@@ -609,6 +611,11 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             IQueryable<Product> distictedProducts = queryDesinger.Distinct().Cast<Product>();
 
             var list = new List<Product>(distictedProducts);
+
+            foreach (var product in list)
+            {
+                Console.WriteLine(product.Supplier.CompanyName);
+            }
             Assert.AreEqual(resultRowCount, list.Count);
 
             string query =
@@ -639,7 +646,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // create child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof(Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
 
             // add categoryNode to root node
             root.AddChildren(categoryNode);
@@ -680,7 +687,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // create child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof(Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
 
             // add categoryNode to root node
             root.AddChildren(categoryNode);
@@ -720,7 +727,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // create child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof(Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
 
             // add categoryNode to root node
             root.AddChildren(categoryNode);
@@ -754,7 +761,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // create child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            var categoryNode = new JoinNode(typeof(Category), "Products");
+            var categoryNode = new JoinNode(typeof(Category),  "Category", "Products");
 
             // add categoryNode to root node
             root.AddChildren(categoryNode);
@@ -786,7 +793,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            root.AddChildren(new JoinNode(typeof(Category), "Products"));
+            root.AddChildren(new JoinNode(typeof(Category),  "Category", "Products"));
 
             var queryDesinger = new QueryDesinger(context, root);
             var count = queryDesinger.Count();
@@ -805,7 +812,7 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             // add child node Category with propertyName "Products". 
             // Because Category linked with Product by next property:
             // public EntitySet<Product> Products 
-            root.AddChildren(new JoinNode(typeof(Category), "Products"));
+            root.AddChildren(new JoinNode(typeof(Category),  "Category", "Products"));
 
             var queryDesinger = new QueryDesinger(context, root);
             var any = queryDesinger.Any();
@@ -827,17 +834,64 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 //                Console.WriteLine(re.CategoryID + " " + re.Products.Count);
 //            }          
 
-            var res = (from product in context.Products
-                       orderby product.ProductID
-                       select new { product, Products = product.Order_Details.Where(p => p.Quantity > 120), Order_Detail = product.Supplier });
-            var resutl = res.ToList();
-            foreach (var list1 in resutl)
+//            var res = (from product in context.Products
+//                       orderby product.ProductID
+//                       select new { product, product.Supplier,
+//                                    Order_Details = product.Order_Details.Where(p => p.Quantity > 120)
+//                                        .Select(od => new { Order_Detail = od, Order = od.Order })
+//                       });
+//
+//            var queryable = res.ToList();
+//            foreach (var list in queryable)
+//            {
+//                list.product.Order_Details.SetSource(list.Order_Details.Select(od=>od.Order_Detail));
+////                foreach (var detail in list.Order_Details)
+////                {
+////                    detail.Product = list.product;
+////                }
+//            }
+//            foreach (var list in queryable)
+//            {
+//                var value = list.product.Order_Details.FirstOrDefault();
+//                if (value != null)
+//                {
+//                    Console.WriteLine(value.Quantity + " " + value.Order.ShipCity);
+//                }
+//            }
+//            return;
+            const int quantity = 120;
+
+            var root = new JoinNode(typeof(Product));
+            var orderDetailNode = new JoinNode(typeof(Order_Detail), "Order_Details", "Product", JoinType.LeftOuterJoin);
+            root.AddChildren(orderDetailNode);
+            
+            // add condition for filtering by CategoryName == "Condiments"
+            orderDetailNode.AddConditions(new Condition("Quantity", quantity, ConditionOperator.GreaterThan));
+
+            var orderNode = new JoinNode(typeof (Order), "Order", "Order_Details", JoinType.LeftOuterJoin);
+            orderDetailNode.AddChildren(orderNode);
+
+            var supplierNode = new JoinNode(typeof(Supplier), "Supplier", "Products", JoinType.LeftOuterJoin);
+            
+            root.AddChildren(supplierNode);
+
+            var queryDesinger = new QueryDesinger(context, root);
+
+            var result = queryDesinger.Cast<Product>().ToList();
+            foreach (Product list1 in result)
             {
-                Console.WriteLine(list1.product.Order_Details.Count);
-                Console.WriteLine(list1.product.Supplier.CompanyName);
+//                Console.WriteLine(list1.product.Supplier.CompanyName);
+//                if (list1.product.Order_Details.HasLoadedOrAssignedValues)
+                {
+                    var value = list1.Order_Details.FirstOrDefault();
+                    if (value != null)
+                    {
+                        Console.WriteLine(value.Quantity + " " + value.Order.ShipCity);
+                    }
+                }
             }
 
-
+            context.SubmitChanges();
 
 //            var res = from categories in context.Categories
 //                      join product in context.Products on categories equals product.Category into ppp
@@ -851,5 +905,192 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 //                Console.WriteLine(list1.categories.Products.Count);
 //            }
         }
+
+        [Test]
+        public void TestComplicatedLeftOuterJoin()
+        {
+            const int quantity = 120;
+
+            var root = new JoinNode(typeof(Customer));
+            var ordersNode = new JoinNode(typeof(Order), "Orders", "Customer", JoinType.LeftOuterJoin);
+            root.AddChildren(ordersNode);
+            root.AddConditions(new Condition("Address", "Kirchgasse 6"));
+
+            var orderDetailNode = new JoinNode(typeof(Order_Detail), "Order_Details", "Order", JoinType.LeftOuterJoin);
+            orderDetailNode.AddConditions(new Condition("Quantity", quantity, ConditionOperator.GreaterThan));
+
+            ordersNode.AddChildren(orderDetailNode);
+
+            var productNode = new JoinNode(typeof(Product), "Product", "Order_Details", JoinType.LeftOuterJoin);
+            orderDetailNode.AddChildren(productNode);
+
+            var employeesNode = new JoinNode(typeof(Employee), "Employee", "Orders", JoinType.LeftOuterJoin);
+            ordersNode.AddChildren(employeesNode);
+
+            var shippersNode = new JoinNode(typeof(Shipper), "Shipper", "Orders", JoinType.LeftOuterJoin);
+            ordersNode.AddChildren(shippersNode);
+
+
+            var queryDesinger = new QueryDesinger(context, root);
+
+            var query = queryDesinger;
+            foreach (Customer value in query)
+            {
+                var orders = value.Orders.Where(o => o.Order_Details.Count > 0).FirstOrDefault();
+                if (orders != null)
+                {
+                    Console.WriteLine("ShipName: " + orders.ShipName);
+                    foreach (var orderDetail in orders.Order_Details)
+                    {
+                        Console.WriteLine("ProductName: " + orderDetail.Product.ProductName);
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void TestAggregateConditionAny()
+        {
+            const int freight = 0;
+            var count = (from customer in context.Customers
+                         where customer.Orders.Any(order => order.Freight >= freight)
+                         select customer).Count();
+
+            QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
+            ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            PredicateAggregationCondition predicateAggregationCondition = new AnyCondition("Orders", conditions);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+
+            count = (from customer in context.Customers
+                         where !customer.Orders.Any(order => order.Freight >= freight)
+                         select customer).Count();
+
+            queryDesinger = new QueryDesinger(context, typeof(Customer));
+            conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            predicateAggregationCondition = new AnyCondition("Orders", conditions, false);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+        }
+
+        [Test]
+        public void TestAggregateConditionAll()
+        {
+            const int freight = 0;
+            var count = (from customer in context.Customers
+                         where customer.Orders.All(order => order.Freight >= freight)
+                         select customer).Count();
+
+            QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
+            ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            PredicateAggregationCondition predicateAggregationCondition = new AllCondition("Orders", conditions);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+
+            count = (from customer in context.Customers
+                     where !customer.Orders.All(order => order.Freight >= freight)
+                     select customer).Count();
+
+            queryDesinger = new QueryDesinger(context, typeof(Customer));
+            conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            predicateAggregationCondition = new AllCondition("Orders", conditions, false);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+        }
+        
+        [Test]
+        public void TestAggregateConditionCount()
+        {
+            const int freight = 10;
+            const int firstCountValue = 0;
+            var count = (from customer in context.Customers
+                         where customer.Orders.Count(order => order.Freight >= freight) > firstCountValue
+                         select customer).Count();
+
+            QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
+            ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            PredicateAggregationCondition predicateAggregationCondition = new CountCondition("Orders", conditions, firstCountValue, ConditionOperator.GreaterThan);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+
+            const int secondCountValue = 5;
+            count = (from customer in context.Customers
+                     where customer.Orders.Count(order => order.Freight >= freight) <= secondCountValue
+                     select customer).Count();
+
+            queryDesinger = new QueryDesinger(context, typeof(Customer));
+            conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            predicateAggregationCondition = new CountCondition("Orders", conditions, secondCountValue, ConditionOperator.LessThanOrEqualTo);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+        }
+        
+        [Test]
+        public void TestAggregateConditionMin()
+        {
+            const int freight = 10;
+            const int firstCountValue = 0;
+            var count = (from customer in context.Customers
+                         where customer.Orders.Min(order => order.Freight / order.OrderID) > firstCountValue
+                         select customer).Count();
+
+            QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Customer));
+            ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            PredicateAggregationCondition predicateAggregationCondition = new CountCondition("Orders", conditions, firstCountValue, ConditionOperator.GreaterThan);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            List<Customer> customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+
+            const int secondCountValue = 5;
+            count = (from customer in context.Customers
+                     where customer.Orders.Count(order => order.Freight >= freight) <= secondCountValue
+                     select customer).Count();
+
+            queryDesinger = new QueryDesinger(context, typeof(Customer));
+            conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            predicateAggregationCondition = new CountCondition("Orders", conditions, secondCountValue, ConditionOperator.LessThanOrEqualTo);
+            queryDesinger.AddConditions(predicateAggregationCondition);
+
+            customers = queryDesinger.Cast<Customer>().ToList();
+
+            Assert.AreEqual(count, customers.Count);
+        }
+
+        [Test]
+        public void TestEnumInCondition()
+        {
+            var count = (from order in context.Orders
+                         where order.OrderDate.Value.DayOfWeek == DayOfWeek.Monday
+                         select order).Count();
+
+            QueryDesinger queryDesinger = new QueryDesinger(context, typeof(Order));
+            ConditionList conditions = new ConditionList(new Condition("OrderDate.Value.DayOfWeek", DayOfWeek.Monday));
+            queryDesinger.AddConditions(conditions);
+
+            var resultCount = queryDesinger.Count();
+
+            Assert.AreEqual(count, resultCount);
+        }
+
     }
 }
