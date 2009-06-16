@@ -107,7 +107,7 @@
     <Compile Include="Parsers\ParametersParser.cs" />
     <Compile Include="Helpers\ReflectionHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Designers\QueryDesinger.cs" />
+    <Compile Include="Designers\QueryDesigner.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="spolty.snk" />

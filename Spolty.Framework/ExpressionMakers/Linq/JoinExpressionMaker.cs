@@ -344,7 +344,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     index++;
                     if (childNode.ChildNodes.Count > 0)
                     {
-                        var queryDesinger = new QueryDesinger(Factory.CurrentContext, childNode.EntityType);
+                        var queryDesinger = new QueryDesigner(Factory.CurrentContext, childNode.EntityType);
                         queryDesinger = queryDesinger.Where(conditions).OrderBy(orderings);
 
                         Expression outerExpression = queryDesinger.Expression;
@@ -353,7 +353,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     }
                     else
                     {
-                        var queryDesinger = new QueryDesinger(Factory.CurrentContext, childNode.EntityType);
+                        var queryDesinger = new QueryDesigner(Factory.CurrentContext, childNode.EntityType);
                         queryDesinger = queryDesinger.Where(childNode.Conditions).OrderBy(orderings);
 
                         newExpression = MakeInnerJoin(newExpression, queryDesinger.Expression, childNode);
