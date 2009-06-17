@@ -233,6 +233,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             LambdaExpression resultSelector =
                 Expression.Lambda(resultSelectorType == outerType ? outerParam : innerParam, outerParam, innerParam);
 
+            if (childNode.Conditions.Count > 0)
+            {
+                innerSourceExpression = Factory.CreateConditionExpressionMaker().Make(childNode.Conditions,
+                                                                                      innerSourceExpression);
+            }
             Expression joinExpression = CallJoinMethod(outerSourceExpression, innerSourceExpression, outerKeySelector,
                                                        innerKeySelector, resultSelector);
 
@@ -348,7 +353,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                     else
                     {
                         var queryDesinger = new QueryDesigner(Factory.CurrentContext, childNode.EntityType);
-                        queryDesinger = queryDesinger.Where(childNode.Conditions).OrderBy(orderings);
+                        queryDesinger = queryDesinger.Where(conditions).OrderBy(orderings);
 
                         newExpression = MakeInnerJoin(newExpression, queryDesinger.Expression, childNode);
                     }
