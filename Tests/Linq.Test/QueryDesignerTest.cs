@@ -8,6 +8,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using LinqNorthwind.Entities;
 using NUnit.Framework;
+using Spolty.Framework.ConfigurationSections;
 using Spolty.Framework.Designers;
 using Spolty.Framework.Parameters.Conditionals;
 using Spolty.Framework.Parameters.Conditionals.Enums;
@@ -1094,6 +1095,13 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             var resultCount = queryDesigner.Count();
 
             Assert.AreEqual(count, resultCount);
+        }
+
+        [Test]
+        public void method()
+        {
+            SpoltyFrameworkSectionHandler.Instance.Use = "EntityFramework";
+            FactoryConfiguration configuration = SpoltyFrameworkSectionHandler.Instance.UseFactory;
         }
 
     }

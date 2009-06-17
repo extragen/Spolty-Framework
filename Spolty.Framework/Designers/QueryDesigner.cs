@@ -422,10 +422,10 @@ namespace Spolty.Framework.Designers
 
         private IExpressionMakerFactory CreateExpressionMakerFactory()
         {
-            FactoryConfigurationCollection collection = SpoltyFrameworkSectionHandler.Instance.Factories;
+            FactoryConfiguration factoryConfiguration = SpoltyFrameworkSectionHandler.Instance.UseFactory;
             return
                 SpoltyActivator.CreateInstance<IExpressionMakerFactory>(
-                    collection.UseFactory.Type, new[] {_context});
+                    factoryConfiguration.Type, new[] {_context});
         }
 
         #endregion

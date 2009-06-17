@@ -14,18 +14,6 @@ namespace Spolty.Framework.ConfigurationSections
             set{ this[UseAttribute] = value; }
         }
 
-        public FactoryConfiguration UseFactory
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(Use))
-                {
-                    return (FactoryConfiguration) BaseGet(0);
-                }
-                return (FactoryConfiguration) BaseGet(Use);
-            }
-        }
-
         protected override ConfigurationElement CreateNewElement()
         {
             return new FactoryConfiguration();
