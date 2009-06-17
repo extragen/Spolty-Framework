@@ -90,14 +90,14 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             }
         }
 
-        private void GetSelectorKeys(Type outerType, Type innerType, string outerProperty,
+        private void GetSelectorKeys(Type outerType, Type innerType, string outerProperty, string innerProperty,
                                      out LambdaExpression outerKeySelector,
                                      out LambdaExpression innerKeySelector)
         {
             ParameterExpression outerParam = ExpressionHelper.CreateOrGetParameterExpression(outerType, outerType.Name, Factory.Store);
             ParameterExpression innerParam = ExpressionHelper.CreateOrGetParameterExpression(innerType, innerType.Name, Factory.Store);
 
-            PropertyInfo pi = outerType.GetProperty(innerType.Name);
+            PropertyInfo pi = outerType.GetProperty(outerProperty);
             if (pi == null)
             {
                 throw new SpoltyException(String.Format("Property:{0} not found", innerType.Name));
@@ -106,12 +106,12 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             if (ExpressionHelper.IEnumerableType.IsAssignableFrom(pi.PropertyType))
             {
                 outerKeySelector = Expression.Lambda(outerParam, outerParam);
-                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(innerType, outerProperty, innerParam);
+                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(innerType, innerProperty, innerParam);
                 innerKeySelector = Expression.Lambda(propertyExpreesion, innerParam);
             }
             else
             {
-                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(outerType, innerType.Name, outerParam);
+                Expression propertyExpreesion = ExpressionHelper.CreateMemberExpression(outerType, outerProperty, outerParam);
                 outerKeySelector = Expression.Lambda(propertyExpreesion, outerParam);
                 innerKeySelector = Expression.Lambda(innerParam, innerParam);
             }
@@ -226,18 +226,12 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             }
             else
             {
-                GetSelectorKeys(outerType, innerType, childNode.AssociatedPropertyName, out outerKeySelector,
+                GetSelectorKeys(outerType, innerType, childNode.ParentPropertyName, childNode.AssociatedPropertyName, out outerKeySelector,
                                 out innerKeySelector);
             }
 
             LambdaExpression resultSelector =
                 Expression.Lambda(resultSelectorType == outerType ? outerParam : innerParam, outerParam, innerParam);
-
-            if (childNode.Conditions.Count > 0)
-            {
-                innerSourceExpression = Factory.CreateConditionExpressionMaker().Make(childNode.Conditions,
-                                                                                      innerSourceExpression);
-            }
 
             Expression joinExpression = CallJoinMethod(outerSourceExpression, innerSourceExpression, outerKeySelector,
                                                        innerKeySelector, resultSelector);
