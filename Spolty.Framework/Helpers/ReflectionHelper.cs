@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using Spolty.Framework.Checkers;
 
@@ -156,5 +158,30 @@ namespace Spolty.Framework.Helpers
             }
             return false;
         }
+
+		public static Func<object, object> MakeDelegateMethod(Type instanceType, MethodInfo method)
+		{
+			MethodInfo genericHelper = typeof(ReflectionHelper).GetMethod("DelegateMethodHelper", BindingFlags.Static | BindingFlags.NonPublic);
+			
+			// Now supply the type arguments
+			MethodInfo constructedHelper = genericHelper.MakeGenericMethod(instanceType, method.ReturnType);
+
+			// Now call it. The null argument is because it's a static method.
+			object ret = constructedHelper.Invoke(null, new object[] { method });
+
+			// Cast the result to the right kind of delegate and return it
+			return (Func<object, object>)ret;
+		}
+
+		private static Func<object, object> DelegateMethodHelper<TTarget, TReturn>(MethodInfo method)
+			where TTarget : class
+		{
+			// Convert the slow MethodInfo into a fast, strongly typed, open delegate
+			Func<TTarget,TReturn> function = (Func<TTarget, TReturn>) Delegate.CreateDelegate(typeof(Func<TTarget, TReturn>), method);
+
+			// Now create a more weakly typed delegate which will call the strongly typed one
+			Func<object, object> ret = (object target) => (object) function((TTarget)target);
+			return ret;
+		}
     }
 }

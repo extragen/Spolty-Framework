@@ -198,8 +198,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
             GetSelectorKeys(outerType, innerType, out outerKeySelector, out innerKeySelector);
 
-            LambdaExpression resultSelector = Expression.Lambda(Expression.Constant(resultSelectorType.Name), outerParam,
-                                                                innerParam);
+            ParameterExpression resultBody = ExpressionHelper.CreateOrGetParameterExpression(resultSelectorType, resultSelectorType.Name, Factory.Store);
+            LambdaExpression resultSelector = Expression.Lambda(resultBody, outerParam, innerParam);
 
             Expression joinExpression = CallJoinMethod(outerSourceExpression, innerSourceExpression, outerKeySelector,
                                                        innerKeySelector, resultSelector);

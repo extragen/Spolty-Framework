@@ -3,66 +3,93 @@ using System.Collections.Generic;
 using System.Data.Objects;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Spolty.Framework.Checkers;
 using Spolty.Framework.EnumeratorProviders;
 using Spolty.Framework.ExpressionMakers.Linq;
+using Spolty.Framework.Helpers;
 
 namespace Spolty.Framework.ExpressionMakers.Factories
 {
-    public class EntityFrameworkExpressionMakerFactory : IExpressionMakerFactory
-    {
-        public EntityFrameworkExpressionMakerFactory(object currentContext)
-        {
-            Checker.CheckArgumentNull(currentContext as ObjectContext, "currentContext");
-            CurrentContext = currentContext;
-            Store = new Dictionary<string, object>(0);
-        }
+	/* In constructor
+	 * 
+	 * Type type = currentContext.GetType();
+	 * IEnumerable<MethodInfo> methodInfos = type.GetMethods(ReflectionHelper.PublicMemberFlag).Where(pi => pi.Name.StartsWith("get_"));
+	 * foreach (var methodInfo in methodInfos)
+	 * {
+	 * 	Func<object, object> method = ReflectionHelper.MakeDelegateMethod(type, methodInfo);
+	 * 	_methods.Add(ReflectionHelper.GetGenericType(methodInfo.ReturnType).Name, method);
+	 * }
+	 * 
+	 * In GetTable method
+	 * 
+	 * (IQueryable) _methods[entityType.Name](CurrentContext);
+	 * 
+	 */
 
-        #region IExpressionMakerFactory Members
+	public class EntityFrameworkExpressionMakerFactory : IExpressionMakerFactory
+	{
+		private readonly Dictionary<string, Func<object, object>> _methods = new Dictionary<string, Func<object, object>>();
+		
+		public EntityFrameworkExpressionMakerFactory(object currentContext)
+		{
+			Checker.CheckArgumentNull(currentContext as ObjectContext, "currentContext");
+			CurrentContext = currentContext;
+			Store = new Dictionary<string, object>(0);
 
-        #region Implementation of IExpressionMakerFactory
+			Type type = currentContext.GetType();
+			IEnumerable<MethodInfo> methodInfos = type.GetMethods(ReflectionHelper.PublicMemberFlag).Where(pi => pi.Name.StartsWith("get_"));
+			foreach (var methodInfo in methodInfos)
+			{
+				Func<object, object> method = ReflectionHelper.MakeDelegateMethod(type, methodInfo);
+				_methods.Add(ReflectionHelper.GetGenericType(methodInfo.ReturnType).Name, method);
+			}
+		}
 
-        public Dictionary<string, object> Store { get; private set; }
+		#region Implementation of IExpressionMakerFactory
 
-        #endregion
+		public Dictionary<string, object> Store { get; private set; }
 
-        public object CurrentContext { get; private set; }
+		#endregion
 
-        public IJoinExpressionMaker CreateJoinExpressionMaker()
-        {
-            return new JoinExpressionMaker(this);
-        }
+		#region IExpressionMakerFactory Members
 
-        public IOrderingExpressionMaker CreateOrderingExpressionMaker()
-        {
-            return new OrderingExpressionMaker(this);
-        }
+		public object CurrentContext { get; private set; }
 
-        public IConditionExpressionMaker CreateConditionExpressionMaker()
-        {
-            return new ConditionExpressionMaker(this);
-        }
+		public IJoinExpressionMaker CreateJoinExpressionMaker()
+		{
+			return new JoinExpressionMaker(this);
+		}
 
-        public ISimpleExpressionMaker CreateSimpleExpressionMaker()
-        {
-            return new ExpressionMaker(this);
-        }
+		public IOrderingExpressionMaker CreateOrderingExpressionMaker()
+		{
+			return new OrderingExpressionMaker(this);
+		}
 
-        public IQueryable GetTable(Type entityType)
-        {
-            var context = ((ObjectContext) CurrentContext);
-            Type oq = typeof (ObjectQuery<>).MakeGenericType(entityType);
-            var objectQuery =
-                (ObjectQuery)
-                oq.GetConstructors()[0].Invoke(new object[] {String.Format("[{0}]", entityType.Name), context});
-            return objectQuery;
-        }
+		public IConditionExpressionMaker CreateConditionExpressionMaker()
+		{
+			return new ConditionExpressionMaker(this);
+		}
 
-        public IEnumeratorProvider CreateEnumeratorProvider(Type entityType, IQueryProvider provider, Expression expression)
-        {
-            return new DefaultEnumeratorProvider(entityType, provider, expression);
-        }
+		public ISimpleExpressionMaker CreateSimpleExpressionMaker()
+		{
+			return new ExpressionMaker(this);
+		}
 
-        #endregion
-    }
+		public IQueryable GetTable(Type entityType)
+		{
+			var context = CurrentContext;
+			PropertyInfo propertyInfo =
+				context.GetType().GetProperties(ReflectionHelper.PublicMemberFlag).FirstOrDefault(
+					pi => ReflectionHelper.GetGenericType(pi.PropertyType) == entityType);
+			return (IQueryable) propertyInfo.GetValue(context, null);
+		}
+
+		public IEnumeratorProvider CreateEnumeratorProvider(Type entityType, IQueryProvider provider, Expression expression)
+		{
+			return new DefaultEnumeratorProvider(entityType, provider, expression);
+		}
+
+		#endregion
+	}
 }

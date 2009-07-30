@@ -38,10 +38,11 @@ namespace Spolty.Framework.EnumeratorProviders
             if (EntityType != expressionType)
             {
                 var result = new List<object>();
-                MemberInfo repositoryMember = ReflectionHelper.GetMemberInfo(expressionType, MethodName.MainProperty);
-                foreach (object value in values)
+            	MethodInfo methodInfo = expressionType.GetMethod("get_" + MethodName.MainProperty, ReflectionHelper.PublicMemberFlag);
+            	Func<object, object> getMethod = ReflectionHelper.MakeDelegateMethod(expressionType, methodInfo);
+            	foreach (object value in values)
                 {
-                    object repositoryValue = ReflectionHelper.GetValue(repositoryMember, value);
+                    object repositoryValue = getMethod(value);
                     result.Add(repositoryValue);
                 }
 

@@ -44,7 +44,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             ParameterExpression parameterExpression = ExpressionHelper.CreateOrGetParameterExpression(sourceType, sourceType.Name, Factory.Store);
 
             Expression body = MakeConditionExpression(condition, parameterExpression, ref sourceExpression);
-            sourceExpression = MakeWhere(sourceType, sourceExpression, body, parameterExpression);
+            
+            if (body != null)
+            {
+                sourceExpression = MakeWhere(sourceType, sourceExpression, body, parameterExpression);
+            }
 
             return sourceExpression;
         }
@@ -245,11 +249,11 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 
                     if (childPropertyInfo == null)
                     {
-                        if (propertyInfo.PropertyType.GetInterface(ExpressionHelper.IQueryableType.Name) != null)
+                        if (ReflectionHelper.IsImplementingInterface(propertyInfo.PropertyType, ExpressionHelper.GenericIEnumerableType))
                         {
                             int previousIndex = index - 1;
                             var innerCondition =
-                                new Condition(condition.FieldName.Remove(0, properties[previousIndex].Length), condition.Value,
+                                new Condition(condition.FieldName.Remove(0, properties[previousIndex].Length + 1), condition.Value,
                                               condition.Operator);
                             var innerConditions = new ConditionList(innerCondition);
 
