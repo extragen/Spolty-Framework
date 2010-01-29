@@ -240,7 +240,8 @@ namespace Spolty.Framework.ExpressionMakers.Linq
             {
                 Expression memberExpression = Expression.Property(parameterExpression, propertyInfo);
                 PropertyInfo childPropertyInfo = propertyInfo;
-                for (int index = secondaryPropertyIndex; index < properties.Length; index++)
+            	var value = condition.Value;
+            	for (int index = secondaryPropertyIndex; index < properties.Length; index++)
                 {
                     if (childPropertyInfo != null)
                     {
@@ -253,7 +254,7 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                         {
                             int previousIndex = index - 1;
                             var innerCondition =
-                                new Condition(condition.FieldName.Remove(0, properties[previousIndex].Length + 1), condition.Value,
+                                new Condition(condition.FieldName.Remove(0, properties[previousIndex].Length + 1), value,
                                               condition.Operator);
                             var innerConditions = new ConditionList(innerCondition);
 
@@ -273,15 +274,33 @@ namespace Spolty.Framework.ExpressionMakers.Linq
                 }
 
                 Expression constantExpression;
-                Type valueType = condition.Value.GetType();
-                Type propertyType = ReflectionHelper.GetGenericType(childPropertyInfo.PropertyType);
+               
+				Type propertyType = ReflectionHelper.GetGenericType(childPropertyInfo.PropertyType);
+                
+				Type valueType;
+				if (ReflectionHelper.IsNullableType(childPropertyInfo.PropertyType))
+				{
+					if (value == null)
+					{
+						valueType = propertyType;
+					}
+					else
+					{
+						throw new SpoltyException("Value in condition not defined");
+					}			
+				}
+				else
+				{
+					valueType = value.GetType();
+				}
+
                 if (valueType == propertyType || !ReflectionHelper.IsConvertible(propertyType))
                 {
-                    constantExpression = Expression.Constant(condition.Value, childPropertyInfo.PropertyType);
+                    constantExpression = Expression.Constant(value, childPropertyInfo.PropertyType);
                 }
                 else
                 {
-                    constantExpression = Expression.Constant(Convert.ChangeType(condition.Value, propertyType),
+                    constantExpression = Expression.Constant(Convert.ChangeType(value, propertyType),
                                                              childPropertyInfo.PropertyType);
                 }
 
