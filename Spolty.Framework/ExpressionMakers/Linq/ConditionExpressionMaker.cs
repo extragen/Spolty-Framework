@@ -278,16 +278,9 @@ namespace Spolty.Framework.ExpressionMakers.Linq
 				Type propertyType = ReflectionHelper.GetGenericType(childPropertyInfo.PropertyType);
                 
 				Type valueType;
-				if (ReflectionHelper.IsNullableType(childPropertyInfo.PropertyType))
+				if (ReflectionHelper.IsNullableType(childPropertyInfo.PropertyType) && value == null)
 				{
-					if (value == null)
-					{
-						valueType = propertyType;
-					}
-					else
-					{
-						throw new SpoltyException("Value in condition not defined");
-					}			
+					valueType = propertyType;
 				}
 				else
 				{

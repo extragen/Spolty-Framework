@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
-using System.Linq.Dynamic;
 using System.Data.SqlClient;
 using System.Linq;
 using LinqNorthwind.Entities;
@@ -1057,8 +1055,8 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
                          where customer.Orders.Min(order => order.Freight / order.OrderID) > firstCountValue
                          select customer).Count();
 
-            QueryDesigner queryDesigner = new QueryDesigner(context, typeof(Customer));
-            ConditionList conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
+            var queryDesigner = new QueryDesigner(context, typeof(Customer));
+            var conditions = new ConditionList(new Condition("Freight", freight, ConditionOperator.GreaterThanOrEqualTo));
             PredicateAggregationCondition predicateAggregationCondition = new CountCondition("Orders", conditions, firstCountValue, ConditionOperator.GreaterThan);
             queryDesigner = queryDesigner.Where(predicateAggregationCondition);
 
@@ -1097,10 +1095,45 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
             Assert.AreEqual(count, resultCount);
         }
 
+		[Test]
+		public void TestNullInNullableCondition()
+		{
+			var queryable = from order in context.Orders
+							where order.OrderDate == null
+							select order;
+			var count = queryable.Count();
+
+			var queryDesigner = new QueryDesigner(context, typeof(Order));
+			var conditions = new ConditionList(new Condition("OrderDate", null));
+			queryDesigner = queryDesigner.Where(conditions);
+
+			var resultCount = queryDesigner.Count();
+
+			Assert.AreEqual(count, resultCount);
+		}		
+		
+		[Test]
+		public void TestDataInNullableCondition()
+		{
+			var queryable = from order in context.Orders
+							where order.OrderDate < DateTime.Now
+							select order;
+			var count = queryable.Count();
+
+			var queryDesigner = new QueryDesigner(context, typeof(Order));
+			var conditions = new ConditionList(new Condition("OrderDate", DateTime.Now, ConditionOperator.LessThan));
+			queryDesigner = queryDesigner.Where(conditions);
+
+			var resultCount = queryDesigner.Count();
+
+			Assert.AreEqual(count, resultCount);
+		}
+
+
         [Test]
         public void method()
         {
-            SpoltyFrameworkSectionHandler.Instance.Use = "EntityFramework";
+            SpoltyFrameworkSectionHandler.Instance.Use = "Linq";
             FactoryConfiguration configuration = SpoltyFrameworkSectionHandler.Instance.UseFactory;
         }
 
