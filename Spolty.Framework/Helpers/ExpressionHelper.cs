@@ -114,12 +114,9 @@ namespace Spolty.Framework.Helpers
                                                                         PropertyInfo innerPropertyInfo,
                                                                         Expression innerPropertyExpression)
         {
-            if (!innerPropertyInfo.PropertyType.IsGenericType)
-            {
-                innerPropertyExpression = ReflectionHelper.IsConvertible(outerPropertyType)
-                                              ? Expression.Convert(innerPropertyExpression, outerPropertyType)
-                                              : Expression.TypeAs(innerPropertyExpression, outerPropertyType);
-            }
+            innerPropertyExpression = ReflectionHelper.IsConvertible(outerPropertyType)
+                                          ? Expression.Convert(innerPropertyExpression, outerPropertyType)
+                                          : Expression.TypeAs(innerPropertyExpression, outerPropertyType);
             return innerPropertyExpression;
         }
 

@@ -121,7 +121,7 @@ namespace Linq.Test
             // public EntitySet<Product> Products 
             root.AddChildren(new JoinNode(typeof(Category), new[] { "CategoryID" }, new[] { "CategoryID" }));
 
-            var queryDesinger = new QueryDesigner(context, root);
+			var queryDesinger = new QueryDesigner(context, root);
             var list = new List<Product>(queryDesinger.Cast<Product>());
 
             // check numbers of entity
@@ -131,6 +131,30 @@ namespace Linq.Test
                 @"SELECT ProductID FROM Products INNER JOIN Categories ON Products.CategoryID = Categories.CategoryID";
 
             CheckDataWithExecuteReaderResult(query, resultRowCount, list);
+        }
+
+        [Test]
+        public void TestJoinWithOneChildByNullableAssociationFileds()
+        {
+            const int resultRowCount = 77;
+            //create root node
+            var root = new JoinNode(typeof(Category));
+
+            // add child node Category with propertyName "Products". 
+            // Because Category linked with Product by next property:
+            // public EntitySet<Product> Products 
+            root.AddChildren(new JoinNode(typeof(Product), new[] { "CategoryID" }, new[] { "CategoryID" }));
+
+            var queryDesinger = new QueryDesigner(context, root);
+            var list = new List<Category>(queryDesinger.Cast<Category>());
+
+            // check numbers of entity
+            Assert.AreEqual(resultRowCount, list.Count);
+
+            string query =
+				@"SELECT CategoryID FROM Categories INNER JOIN Products ON Categories.CategoryID = Products.CategoryID";
+
+//            CheckDataWithExecuteReaderResult(query, resultRowCount, list);
         }
 
         /// <summary>
@@ -827,6 +851,19 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
         [Test]
         public void TestLeftOuterJoin()
         {
+        	var query = from orderDetail in context.Order_Details
+        	            join product in context.Products on orderDetail.Product equals product into gr
+        	            from grProduct in gr.DefaultIfEmpty()
+						where grProduct.ProductName == "some"
+        	            select new {orderDetail, pr = grProduct};
+        	query.ToList();
+
+        	var ordeDetailrNode = new JoinNode(typeof (Order_Detail));
+        	var productNode = new JoinNode(typeof(Product), "Product", "Order_Details", JoinType.LeftOuterJoin);
+			productNode.AddConditions(new Condition("ProductName", "some"));
+        	ordeDetailrNode.AddChildren(productNode);
+			
+        	var queryDesigner = new QueryDesigner(context, ordeDetailrNode).Cast<Order_Detail>().ToList();
 //            var dlo = new DataLoadOptions();
 //            dlo.AssociateWith<Category>(c => c.Products.Where(p => p.ProductName.Contains("l")));
 //            context.LoadOptions = dlo;
@@ -862,39 +899,37 @@ WHERE Products.ProductName like N'Louisiana%' AND Categories.CategoryName = N'Co
 //                }
 //            }
 //            return;
-            const int quantity = 120;
-
-            var root = new JoinNode(typeof(Product));
-            var orderDetailNode = new JoinNode(typeof(Order_Detail), "Order_Details", "Product", JoinType.LeftOuterJoin);
-            root.AddChildren(orderDetailNode);
-            
-            // add condition for filtering by CategoryName == "Condiments"
-            orderDetailNode.AddConditions(new Condition("Quantity", quantity, ConditionOperator.GreaterThan));
-
-            var orderNode = new JoinNode(typeof (Order), "Order", "Order_Details", JoinType.LeftOuterJoin);
-            orderDetailNode.AddChildren(orderNode);
-
-            var supplierNode = new JoinNode(typeof(Supplier), "Supplier", "Products", JoinType.LeftOuterJoin);
-            
-            root.AddChildren(supplierNode);
-
-            var queryDesinger = new QueryDesigner(context, root);
-
-            var result = queryDesinger.Cast<Product>().ToList();
-            foreach (Product list1 in result)
-            {
-//                Console.WriteLine(list1.product.Supplier.CompanyName);
-//                if (list1.product.Order_Details.HasLoadedOrAssignedValues)
-                {
-                    var value = list1.Order_Details.FirstOrDefault();
-                    if (value != null)
-                    {
-                        Console.WriteLine(value.Quantity + " " + value.Order.ShipCity);
-                    }
-                }
-            }
-
-            context.SubmitChanges();
+//            const int quantity = 120;
+//
+//            var root = new JoinNode(typeof(Product));
+//            var orderDetailNode = new JoinNode(typeof(Order_Detail), "Order_Details", "Product", JoinType.LeftOuterJoin);
+//            root.AddChildren(orderDetailNode);
+//            
+//            // add condition for filtering by CategoryName == "Condiments"
+//            orderDetailNode.AddConditions(new Condition("Quantity", quantity, ConditionOperator.GreaterThan));
+//
+//            var orderNode = new JoinNode(typeof (Order), "Order", "Order_Details", JoinType.LeftOuterJoin);
+//            orderDetailNode.AddChildren(orderNode);
+//
+//            var supplierNode = new JoinNode(typeof(Supplier), "Supplier", "Products", JoinType.LeftOuterJoin);
+//            
+//            root.AddChildren(supplierNode);
+//
+//            var queryDesinger = new QueryDesigner(context, root);
+//
+//            var result = queryDesinger.Cast<Product>().ToList();
+//            foreach (Product list1 in result)
+//            {
+////                Console.WriteLine(list1.product.Supplier.CompanyName);
+////                if (list1.product.Order_Details.HasLoadedOrAssignedValues)
+//                {
+//                    var value = list1.Order_Details.FirstOrDefault();
+//                    if (value != null)
+//                    {
+//                        Console.WriteLine(value.Quantity + " " + value.Order.ShipCity);
+//                    }
+//                }
+//            }
 
 //            var res = from categories in context.Categories
 //                      join product in context.Products on categories equals product.Category into ppp
