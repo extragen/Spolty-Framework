@@ -1,0 +1,763 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Spolty.Framework</name>
+    </assembly>
+    <members>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.BaseCondition.Clone">
+            <summary>
+            Creates a new object that is a copy of the current instance.
+            </summary>
+            
+            <returns>
+            A new object that is a copy of this instance.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.BaseCondition.Operator">
+            <summary>
+            Gets or sets comparison operator.
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Conditionals.AndCondition">
+            <summary>
+            Class define AndCondition. 
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.BiCondition.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. <see cref="M:System.Object.GetHashCode"></see> is suitable for use in hashing algorithms and data structures like a hash table.
+            </summary>
+            
+            <returns>
+            A hash code for the current <see cref="T:System.Object"></see>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.BiCondition.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>.
+            </summary>
+            
+            <returns>
+            true if the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>; otherwise, false.
+            </returns>
+            
+            <param name="obj">The <see cref="T:System.Object"></see> to compare with the current <see cref="T:System.Object"></see>. </param><filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.BiCondition.LeftCondition">
+            <summary>
+            Gets left <see cref="T:Spolty.Framework.Parameters.Conditionals.BaseCondition"/>
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.BiCondition.RightCondition">
+            <summary>
+            Gets right <see cref="T:Spolty.Framework.Parameters.Conditionals.BaseCondition"/>
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.AndCondition.#ctor">
+            <summary>
+            Creates condition. Used only for serialization.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.AndCondition.#ctor(Spolty.Framework.Parameters.Conditionals.BaseCondition,Spolty.Framework.Parameters.Conditionals.BaseCondition)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.AndCondition"/> between left and right <see cref="T:Spolty.Framework.Parameters.Conditionals.BaseCondition"/>.
+            </summary>
+            <param name="leftCondition">left condition.</param>
+            <param name="rightCondition">right condition.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.AndCondition.#ctor(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.AndCondition"/> by <see cref="T:System.Collections.Generic.IList`1"/> of conditions.
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.BaseNode.BaseNode.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>.
+            </summary>
+            <returns>
+            true if the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>; otherwise, false.
+            </returns>
+            <param name="obj">The <see cref="T:System.Object"></see> to compare with the current <see cref="T:System.Object"></see>. </param><filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.BaseNode.BaseNode.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. <see cref="M:System.Object.GetHashCode"></see> is suitable for use in hashing algorithms and data structures like a hash table.
+            </summary>
+            <returns>
+            A hash code for the current <see cref="T:System.Object"></see>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.BaseNode.BaseNode.Compare(Spolty.Framework.Parameters.BaseNode.BaseNode,Spolty.Framework.Parameters.BaseNode.BaseNode)">
+            <summary>
+            Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
+            </summary>
+            <returns>
+            Value Condition Less than zerox is less than y.Zerox equals y.Greater than zerox is greater than y.
+            </returns>
+            <param name="y">The second object to compare.</param>
+            <param name="x">The first object to compare.</param>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Conditionals.OrCondition">
+            <summary>
+            Class define OrConditions
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.#ctor">
+            <summary>
+            Creates condition. Used only for serialization.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.#ctor(Spolty.Framework.Parameters.Conditionals.BaseCondition,Spolty.Framework.Parameters.Conditionals.BaseCondition)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> between left and right <see cref="T:Spolty.Framework.Parameters.Conditionals.BaseCondition"/>s.
+            </summary>
+            <param name="leftCondition">left condition.</param>
+            <param name="rightCondition">right condition.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.#ctor(System.Collections.Generic.IList{Spolty.Framework.Parameters.Conditionals.BaseCondition},System.Collections.Generic.IList{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> between left and right <see cref="T:System.Collections.Generic.IList`1"/>s.
+            List of conditions in parameters unite inside by <see cref="T:Spolty.Framework.Parameters.Conditionals.AndCondition"/>.
+            </summary>
+            <param name="leftConditions">conditions which will be created as <see cref="T:Spolty.Framework.Parameters.Conditionals.AndCondition"/>.</param>
+            <param name="rightConditions">conditions which will be created as <see cref="T:Spolty.Framework.Parameters.Conditionals.AndCondition"/>.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.#ctor(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> from <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            </summary>
+            <param name="conditions"><see cref="T:System.Collections.Generic.IEnumerable`1"/> of conditions.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.Create(System.String,System.Object[])">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> with the same <paramref name="fieldName"/> cref="fieldName"/&gt; and differents <paramref name="values"/>.
+            <paramref name="fieldName"/> and <paramref name="values"/> compare by <see cref="F:Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator.EqualTo"/>.
+            <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/> define as null.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="values"></param>
+            <returns><see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> which contains <see cref="T:Spolty.Framework.Parameters.Conditionals.Condition"/> where the same 
+            <paramref name="fieldName"/> and differents <paramref name="values"/>.
+            </returns>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.Create(System.String,System.Object[],Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> with the same <paramref name="fieldName"/> cref="fieldName"/&gt; and differents <paramref name="values"/>.
+            <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/> define as null.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="values"></param>
+            <param name="operator"></param>
+            <returns><see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> which contains <see cref="T:Spolty.Framework.Parameters.Conditionals.Condition"/> where the same 
+            <paramref name="fieldName"/> and differents <paramref name="values"/>.
+            </returns>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.OrCondition.Create(System.String,System.Object[],Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator,System.Type)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> with the same <paramref name="fieldName"/> cref="fieldName"/&gt; and differents <paramref name="values"/>.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="values"></param>
+            <param name="operator"></param>
+            <param name="entityType">defines filtering Entity.</param>
+            <returns><see cref="T:Spolty.Framework.Parameters.Conditionals.OrCondition"/> which contains <see cref="T:Spolty.Framework.Parameters.Conditionals.Condition"/> where the same 
+            <paramref name="fieldName"/> and differents <paramref name="values"/>.
+            </returns>
+        </member>
+        <member name="T:Spolty.Framework.ExpressionMakers.Factories.LinqExpressionMakerFactory">
+            <summary>
+            Class defines factory.
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Conditionals.BoolCondition">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.BoolCondition"/>. 
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.BoolCondition.#ctor">
+            <summary>
+            Creates condition. Used only for serialization.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.BoolCondition.#ctor(System.Boolean)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.BoolCondition"/>
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.BoolCondition.Clone">
+            <summary>
+            Creates a new object that is a copy of the current instance.
+            </summary>
+            
+            <returns>
+            A new object that is a copy of this instance.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.BoolCondition.Value">
+            <summary>
+            Gets or sets value.
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.IParameterMarker">
+            <summary>
+            Marker interface
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Orderings.OrderingList.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"></see> that represents the current <see cref="T:System.Object"></see>.
+            </summary>
+            
+            <returns>
+            A <see cref="T:System.String"></see> that represents the current <see cref="T:System.Object"></see>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Conditionals.FieldCondition">
+            <summary>
+            Class defines FieldConditions which makes possible to compare columns between to tables.
+            The <see cref="T:Spolty.Framework.Parameters.Conditionals.FieldCondition"/> using for joins between tables by fields.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.FieldCondition.#ctor">
+            <summary>
+            Creates condition. Used only for serialization.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.FieldCondition.#ctor(System.String,Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator,System.String,System.Type,System.Type)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Conditionals.FieldCondition"/> 
+            </summary>
+            <param name="leftFieldName">field name for the left Entity.</param>
+            <param name="rightFieldName">field name for the right Entity</param>
+            <param name="condOperator"></param>
+            <param name="leftElementType">type of left Entity.</param>
+            <param name="rightElementType">type of right Entity.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.FieldCondition.Clone">
+            <summary>
+            Creates a new object that is a copy of the current instance.
+            </summary>
+            
+            <returns>
+            A new object that is a copy of this instance.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.FieldCondition.LeftFieldName">
+            <summary>
+            Gets or sets field name for the <see cref="P:Spolty.Framework.Parameters.Conditionals.FieldCondition.LeftElementType"/>.
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.FieldCondition.RightFieldName">
+            <summary>
+            Get or sets field name for the <see cref="P:Spolty.Framework.Parameters.Conditionals.FieldCondition.RightElementType"/>.
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.FieldCondition.LeftElementType">
+            <summary>
+            Gets or sets elment type for the left table.
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.FieldCondition.RightElementType">
+            <summary>
+            Gets or sets elment type for the right table.
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Orderings.Ordering">
+            <summary>
+            Ordering definition.
+            Defines ordering rule for one column
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Orderings.Ordering.#ctor(System.String)">
+            <summary>
+            Create ordering with ascending direction.
+            </summary>
+            <param name="columnName"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Orderings.Ordering.#ctor(System.String,System.Type)">
+            <summary>
+            Create ordering with ascending direction.
+            </summary>
+            <param name="columnName"></param>
+            <param name="elementType"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Orderings.Ordering.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. <see cref="M:System.Object.GetHashCode"></see> is suitable for use in hashing algorithms and data structures like a hash table.
+            </summary>
+            
+            <returns>
+            A hash code for the current <see cref="T:System.Object"></see>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Orderings.Ordering.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>.
+            </summary>
+            
+            <returns>
+            true if the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>; otherwise, false.
+            </returns>
+            
+            <param name="obj">The <see cref="T:System.Object"></see> to compare with the current <see cref="T:System.Object"></see>. </param><filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Orderings.Ordering.ColumnName">
+            <summary>
+            Gets or sets field name
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Orderings.Ordering.SortDirection">
+            <summary>
+            Gets or sets comparison operator
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Conditionals.ConditionList">
+            <summary>
+            Class define list of <see cref="T:Spolty.Framework.Parameters.Conditionals.BaseCondition"/>.
+            Class markered as <see cref="T:Spolty.Framework.Parameters.IParameterMarker"/> for using it as passing parameter.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.#ctor">
+            <summary>
+            Creates empty condition list
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.#ctor(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Creates condition list by <see cref="T:System.Collections.Generic.IEnumerable`1"/>
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.#ctor(Spolty.Framework.Parameters.Conditionals.BaseCondition[])">
+            <summary>
+            Creates condtion list by params 
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.RemoveDuplicates">
+            <summary>
+            Removes duplicates condition
+            </summary>
+            <returns>number of removed items</returns>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.AddConditions(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Adds condtions to conditions list
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.AddConditions(Spolty.Framework.Parameters.Conditionals.BaseCondition[])">
+            <summary>
+            Adds condtions to conditions list
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.SetElementType(System.Type)">
+            <summary>
+            Sets concrete type to all condition 
+            </summary>
+            <param name="elementType"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.ElementTypeConditions``1">
+            <summary>
+            Gets condtion list with concrete type defined in generic.
+            </summary>
+            <typeparam name="T">concrete type.</typeparam>
+            <returns>condition list with type of <see cref="!:T"/>.</returns>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.ElementTypeConditions(System.Type)">
+            <summary>
+            Gets condtion list with concrete type
+            </summary>
+            <param name="elementType">concrete type.</param>
+            <returns>condtion list with concrete type.</returns>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.AddConditions(System.String,System.Object[])">
+            <summary>
+            Adds <see cref="T:Spolty.Framework.Parameters.Conditionals.Condition"/>s with the same <see cref="!:fieldName"/> and differents <see cref="!:values"/>.
+            <see cref="!:fieldName"/> and <see cref="!:values"/> compare by <see cref="F:Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator.EqualTo"/>.
+            <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/> define as null.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="values"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.AddConditions(System.String,System.Object[],Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator)">
+            <summary>
+            Adds <see cref="T:Spolty.Framework.Parameters.Conditionals.Condition"/>s with the same <see cref="!:fieldName"/> and differents <see cref="!:values"/>
+            <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/> define as null.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="values"></param>
+            <param name="operator"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.ConditionList.AddConditions(System.String,System.Object[],Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator,System.Type)">
+            <summary>
+            Adds <see cref="T:Spolty.Framework.Parameters.Conditionals.Condition"/>s with the same <see cref="!:fieldName"/> and differents <see cref="!:values"/>
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="values"></param>
+            <param name="operator"></param>
+            <param name="entityType">defines filtering Entity.</param>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Conditionals.Condition">
+            <summary>
+            Class define condition
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.#ctor">
+            <summary>
+            Creates condition. Used only for serialization.
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.#ctor(System.String,System.Object)">
+            <summary>
+            Creates condition with <see cref="F:Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator.EqualTo"/> and not defined <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/>.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table</param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.#ctor(System.String,System.Object,Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator)">
+            <summary>
+            Creates condition with not defined <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/>. 
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="value"></param>
+            <param name="condOperator"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.#ctor(System.String,System.Object,Spolty.Framework.Parameters.Conditionals.Enums.ConditionOperator,System.Type)">
+            <summary>
+            Creates condition to concrete <see cref="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType"/>.
+            </summary>
+            <param name="fieldName">name of a field which mapped with table.</param>
+            <param name="value"></param>
+            <param name="condOperator"></param>
+            <param name="elementType">defines filtering Entity.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. <see cref="M:System.Object.GetHashCode"></see> is suitable for use in hashing algorithms and data structures like a hash table.
+            </summary>
+            
+            <returns>
+            A hash code for the current <see cref="T:System.Object"></see>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>.
+            </summary>
+            
+            <returns>
+            true if the specified <see cref="T:System.Object"></see> is equal to the current <see cref="T:System.Object"></see>; otherwise, false.
+            </returns>
+            
+            <param name="obj">The <see cref="T:System.Object"></see> to compare with the current <see cref="T:System.Object"></see>. </param><filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Conditionals.Condition.Clone">
+            <summary>
+            Creates a new object that is a copy of the current instance.
+            </summary>
+            
+            <returns>
+            A new object that is a copy of this instance.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.Condition.FieldName">
+            <summary>
+            Gets or sets field name
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.Condition.Value">
+            <summary>
+            Gets or sets value for comparison
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Conditionals.Condition.ElementType">
+            <summary>
+            Gets or sets filtering entity type
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Orderings.Enums.SortDirection">
+            <summary>
+            Sorting direction
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Parameters.Joins.JoinNode">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.#ctor(System.Type)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> object by entityType. Use only for Linq To Sql.
+            If it child <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> then it'll be joined by association which defined in <see cref="T:System.Data.Linq.Mapping.MetaModel"/>.
+            </summary>
+            <param name="entityType">Type of entity</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.#ctor(System.Type,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates child <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> object by entityType and defines field names which will be use for comparison in inner join.
+            <see cref="P:Spolty.Framework.Parameters.Joins.JoinNode.JoinWithParentBy"/> by default is <see cref="F:Spolty.Framework.Parameters.Joins.Enums.JoinType.InnerJoin"/>.
+            </summary>
+            <param name="entityType">Type of Entity.</param>
+            <param name="parentFieldsNames">fields which defined in the parent Entity. </param>
+            <param name="currentFieldsNames">fields which defined for the current Entity.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.#ctor(System.Type,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String},Spolty.Framework.Parameters.Joins.Enums.JoinType)">
+            <summary>
+            Creates child <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> object by entityType and defines field names which will be use for comparison in join.
+            </summary>
+            <param name="entityType">Type of Entity.</param>
+            <param name="parentFieldsNames">fields which defined in the parent Entity. </param>
+            <param name="currentFieldsNames">fields which defined for the current Entity.</param>
+            <param name="joinWithParentBy">defines join between two Entity queries.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.#ctor(System.Type,System.String,System.String)">
+            <summary>
+            Creates child <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> object by entityType and defined in Entity <paramref name="associatedPropertyName"/> 
+            which associated with parent Entity.
+            <see cref="P:Spolty.Framework.Parameters.Joins.JoinNode.JoinWithParentBy"/> by default is <see cref="F:Spolty.Framework.Parameters.Joins.Enums.JoinType.InnerJoin"/>.
+            </summary>
+            <param name="entityType">Type of Entity.</param>
+            <param name="associatedPropertyName">associated with parent property.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.#ctor(System.Type,System.String,System.String,Spolty.Framework.Parameters.Joins.Enums.JoinType)">
+            <summary>
+            Creates child <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> object by entityType and defined in Entity <paramref name="associatedPropertyName"/> 
+            which associated with parent Entity.
+            </summary>
+            <param name="entityType">Type of Entity.</param>
+            <param name="parentPropertyName"></param>
+            <param name="associatedPropertyName">associated with parent property.</param>
+            <param name="joinWithParentBy">defines join between two Entity queries.</param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.AddConditions(Spolty.Framework.Parameters.Conditionals.BaseCondition[])">
+            <summary>
+            Adds conditions for current <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/>.
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.AddConditions(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Adds conditions for current <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/>.
+            </summary>
+            <param name="conditions"></param>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type. <see cref="M:System.Object.GetHashCode"></see> is suitable for use in hashing algorithms and data structures like a hash table.
+            </summary>
+            <returns>
+            A hash code for the current <see cref="T:System.Object"></see>.
+            </returns>
+            <filterpriority>2</filterpriority>
+        </member>
+        <member name="M:Spolty.Framework.Parameters.Joins.JoinNode.Compare(Spolty.Framework.Parameters.BaseNode.BaseNode,Spolty.Framework.Parameters.BaseNode.BaseNode)">
+            <summary>
+            Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
+            </summary>
+            <returns>
+            Value Condition Less than zerox is less than y.Zerox equals y.Greater than zerox is greater than y.
+            </returns>
+            <param name="y">The second object to compare.</param>
+            <param name="x">The first object to compare.</param>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Joins.JoinNode.JoinWithParentBy">
+            <summary>
+            Gets type of join between current <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> and parent <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/>.
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Joins.JoinNode.AssociatedPropertyName">
+            <summary>
+            Gets property name associated with parent property.
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Joins.JoinNode.ParentFieldsNames">
+            <summary>
+            Gets field names which defined in parent Entity. 
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Joins.JoinNode.CurrentFieldsNames">
+            <summary>
+            Gets field name which defined in current Entity.
+            </summary>
+        </member>
+        <member name="P:Spolty.Framework.Parameters.Joins.JoinNode.Conditions">
+            <summary>
+            Gets conditions for current <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/>.
+            </summary>
+        </member>
+        <member name="T:Spolty.Framework.Designers.QueryDesigner">
+            <summary>
+            QueryDesigner class 
+            </summary>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.#ctor(System.Object,Spolty.Framework.Parameters.Joins.JoinNode,Spolty.Framework.Parameters.IParameterMarker[])">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> by <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/> tree. 
+            </summary>
+            <param name="context">object context.</param>
+            <param name="root">root <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/>. Defines result type of <see cref="T:System.Linq.IQueryProvider"/> ElementType</param>
+            <param name="parameters">additional parameters <see cref="T:Spolty.Framework.Parameters.IParameterMarker"/> use for creation 
+            additional condition <see cref="T:Spolty.Framework.Parameters.Conditionals.ConditionList"/> and/or ordering <see cref="T:Spolty.Framework.Parameters.Orderings.OrderingList"/>.</param>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.#ctor(System.Object,System.Type)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> by type of entity from context.
+            </summary>
+            <param name="context">object context.</param>
+            <param name="entityType">type of entity.</param>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.#ctor(System.Object,System.Linq.IQueryable)">
+            <summary>
+            Creates <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> by <see cref="T:System.Linq.IQueryable"/>.
+            </summary>
+            <param name="context">object context</param>
+            <param name="queryable">already formed queryable. 
+            It can be Linq To Sql formed query or formed by <see cref="T:Spolty.Framework.Designers.QueryDesigner"/></param>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Where(Spolty.Framework.Parameters.Conditionals.BaseCondition[])">
+            <summary>
+            Adds to current <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> additional conditions.
+            </summary>
+            <param name="conditions">additional conditions.</param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that filtered by conditions. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Where(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Conditionals.BaseCondition})">
+            <summary>
+            Adds to current <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> additional conditions.
+            </summary>
+            <param name="conditions">additional conditions. </param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that filtered by conditions. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.OrderBy(Spolty.Framework.Parameters.Orderings.Ordering[])">
+            <summary>
+            Adds orderings to <see cref="T:Spolty.Framework.Designers.QueryDesigner"/>. Orderings apply only for current EntityType. 
+            </summary>
+            <remarks>If you want apply orderings to joined types you should use Join method with defined <see cref="T:Spolty.Framework.Parameters.Orderings.OrderingList"/> parameter.</remarks>
+            <param name="orderings"></param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that contains orderings.</returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.OrderBy(System.Collections.Generic.IEnumerable{Spolty.Framework.Parameters.Orderings.Ordering})">
+            <summary>
+            Adds orderings to <see cref="T:Spolty.Framework.Designers.QueryDesigner"/>. Orderings apply only for current EntityType. 
+            </summary>
+            <remarks>If you want apply orderings to joined types you should use Join method with defined <see cref="T:Spolty.Framework.Parameters.Orderings.OrderingList"/> parameter.</remarks>
+            <param name="orderings"></param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that contains orderings.</returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Except(System.Linq.IQueryable)">
+            <summary>
+            Produces the set difference of two sequences by using the default equality comparer to compare values. 
+            First sequence it's current <see cref="T:Spolty.Framework.Designers.QueryDesigner"/>, second it's passing parameter <see cref="T:System.Linq.IQueryable"/> . 
+            </summary>
+            <param name="exceptQueryable">An <see cref="T:System.Linq.IQueryable"/> whose elements that also occur in the first sequence will not appear in the returned sequence. </param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that contains the set difference of the two sequences. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Union(System.Linq.IQueryable)">
+            <summary>
+            Produces the set union of two sequences by using the default equality comparer. 
+            First sequence is current <see cref="T:Spolty.Framework.Designers.QueryDesigner"/>.
+            </summary>
+            <param name="unionQueryable">A sequence whose distinct elements form the second set for the union operation. </param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that contains the elements from both input sequences, excluding duplicates. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Join(Spolty.Framework.Parameters.Joins.JoinNode,Spolty.Framework.Parameters.IParameterMarker[])">
+            <summary>
+            Adds joins to current <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> by using <see cref="T:Spolty.Framework.Parameters.Joins.JoinNode"/>. 
+            </summary>
+            <param name="rootNode">root noode should be equal type to current ElementType</param>
+            <param name="parameteres">additional parameters <see cref="T:Spolty.Framework.Parameters.IParameterMarker"/> use for creation 
+            additional condition <see cref="T:Spolty.Framework.Parameters.Conditionals.ConditionList"/> and/or ordering <see cref="T:Spolty.Framework.Parameters.Orderings.OrderingList"/>. 
+            Orderings in this case could be assigned to joins nodes.</param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> which has joins with other Entity filtered and ordered by passed parameteres.</returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Cast``1">
+            <summary>
+            Converts the elements of an IQueryable to the specified type. 
+            </summary>
+            <remarks>Current method execute query if you made left outer join by using <see cref="T:Spolty.Framework.Designers.QueryDesigner"/>.</remarks>
+            <typeparam name="TResult">The type to convert the elements of source to. </typeparam>
+            <returns>An <see cref="T:System.Linq.IQueryable`1"/> that contains each element of the source sequence converted to the specified type. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Skip(System.Int32)">
+            <summary>
+            Bypasses a specified number of elements in a sequence and then returns the remaining elements. 
+            </summary>
+            <param name="count">The number of elements to skip before returning the remaining elements. </param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that contains elements that occur after the specified index in the input sequence. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Take(System.Int32)">
+            <summary>
+            Returns a specified number of contiguous elements from the start of a sequence.
+            </summary>
+            <param name="count">The number of elements to return. </param>
+            <returns>A <see cref="T:Spolty.Framework.Designers.QueryDesigner"/> that contains the specified number of elements from the start of source. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Distinct">
+            <summary>
+            Returns distinct elements from a sequence by using the default equality comparer to compare values. 
+            </summary>
+            <returns>Returns distinct elements from a sequence by using the default equality comparer to compare values.</returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Count">
+            <summary>
+            Returns the number of elements in a sequence. 
+            </summary>
+            <returns>The number of elements in the input sequence. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.Any">
+            <summary>
+            Determines whether a sequence contains any elements.
+            </summary>
+            <returns>true if the source sequence contains any elements; otherwise, false. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.First">
+            <summary>
+            Returns the first element of a sequence. 
+            </summary>
+            <returns>The first element in current <see cref="T:Spolty.Framework.Designers.QueryDesigner"/>. </returns>
+        </member>
+        <member name="M:Spolty.Framework.Designers.QueryDesigner.FirstOrDefault">
+            <summary>
+            Returns the first element of a sequence, or a default value if the sequence contains no elements. 
+            </summary>
+            <returns>default(ElementType) if source is empty; otherwise, the first element in source. </returns>
+        </member>
+        <member name="P:Spolty.Framework.Designers.QueryDesigner.Expression">
+            <summary>
+            Gets the expression tree that is associated with the instance of <see cref="T:System.Linq.IQueryable"/>.
+            </summary>
+            <returns>
+            The <see cref="T:System.Linq.Expressions.Expression"/> that is associated with this instance of <see cref="T:System.Linq.IQueryable"/>.
+            </returns>
+        </member>
+        <member name="P:Spolty.Framework.Designers.QueryDesigner.ElementType">
+            <summary>
+            Gets the type of the element(s) that are returned when the expression tree associated with this instance of <see cref="T:System.Linq.IQueryable"/> is executed.
+            </summary>
+            <returns>
+            A <see cref="T:System.Type"/> that represents the type of the element(s) that are returned when the expression tree associated with this object is executed.
+            </returns>
+        </member>
+        <member name="P:Spolty.Framework.Designers.QueryDesigner.Provider">
+            <summary>
+            Gets the query provider that is associated with this data source.
+            </summary>
+            <returns>
+            The <see cref="T:System.Linq.IQueryProvider"/> that is associated with this data source.
+            </returns>
+        </member>
+    </members>
+</doc>
